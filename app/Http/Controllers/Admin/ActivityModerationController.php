@@ -38,6 +38,10 @@ class ActivityModerationController extends Controller
         $queueQuery = DB::table('activities as a')
             ->leftJoin('users as u', 'u.id', '=', 'a.provider_id')
             ->leftJoin('municipalities as m', 'm.id', '=', 'a.municipality_id')
+            ->when($hasProviders, function ($query) {
+                // Providers table is optional across deployments; only join when it exists.
+                $query->leftJoin('providers as p', 'p.user_id', '=', 'u.id');
+            })
             ->select([
                 'a.id',
                 DB::raw($titleExpr.' as title'),
