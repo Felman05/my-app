@@ -1,0 +1,10 @@
+# Environment / secrets
+.env
+
+# Database dumps
+config/*.sql
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
