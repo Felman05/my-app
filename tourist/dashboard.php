@@ -146,7 +146,7 @@ try {
         </div>
         <div>
           <div class="sub-lbl">Packing Essentials</div>
-          <div class="pack-row"><span class="pack-chip ess">Water</span><span class="pack-chip ess">ID</span><span class="pack-chip">Sunscreen</span><span class="pack-chip">Snacks</span><span class="pack-chip">Powerbank</span></div>
+          <div class="pack-row" id="pack-chips"><span class="pack-chip" style="opacity:.5;">Loading...</span></div>
         </div>
       </section>
     </div>
@@ -197,6 +197,26 @@ try {
     })
     .catch(function () {
       grid.innerHTML = '<div class="wx-cell" style="grid-column:1/-1;opacity:.5;">Weather unavailable.</div>';
+    });
+}());
+
+// Dynamic packing chips
+(function () {
+  var chips = document.getElementById('pack-chips');
+  if (!chips) return;
+  fetch('/doon-app/api/packing.php')
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      if (!json.success || !Array.isArray(json.data) || !json.data.length) {
+        chips.innerHTML = '<span class="pack-chip" style="opacity:.5;">No suggestions.</span>';
+        return;
+      }
+      chips.innerHTML = json.data.map(function (item) {
+        return '<span class="pack-chip' + (item.essential ? ' ess' : '') + '">' + item.item + '</span>';
+      }).join('');
+    })
+    .catch(function () {
+      chips.innerHTML = '<span class="pack-chip" style="opacity:.5;">Unavailable.</span>';
     });
 }());
 </script>

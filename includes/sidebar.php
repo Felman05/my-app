@@ -31,6 +31,7 @@ function isActive($page) {
             <a href="/doon-app/tourist/map.php" class="sb-item <?php echo isActive('map.php'); ?>"><span class="sb-ico">M</span>Map</a>
             <a href="/doon-app/tourist/itinerary.php" class="sb-item <?php echo isActive('itinerary.php'); ?>"><span class="sb-ico">I</span>Itineraries</a>
             <a href="/doon-app/tourist/favorites.php" class="sb-item <?php echo isActive('favorites.php'); ?>"><span class="sb-ico">S</span>Favorites</a>
+            <a href="/doon-app/tourist/directory.php" class="sb-item <?php echo isActive('directory.php'); ?>"><span class="sb-ico">B</span>Directory</a>
             <a href="/doon-app/tourist/chatbot.php" class="sb-item <?php echo isActive('chatbot.php'); ?>"><span class="sb-ico">C</span>Chatbot</a>
             <a href="/doon-app/tourist/weather.php" class="sb-item <?php echo isActive('weather.php'); ?>"><span class="sb-ico">W</span>Weather</a>
 

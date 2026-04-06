@@ -38,8 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $listingType = $_POST['listing_type'] ?? 'other';
     $description = trim($_POST['description'] ?? '');
     $priceLabel  = $_POST['price_label'] ?? null;
-    $price       = $_POST['price'] !== '' ? (float) $_POST['price'] : null;
+    $price       = ($_POST['price'] ?? '') !== '' ? (float) $_POST['price'] : null;
     $contact     = trim($_POST['contact_number'] ?? '');
+    $capacity    = ($_POST['capacity'] ?? '') !== '' ? (int) $_POST['capacity'] : null;
+    $openTime    = trim($_POST['open_time'] ?? '');
+    $closeTime   = trim($_POST['close_time'] ?? '');
+    $openDays    = $_POST['open_days'] ?? [];
+    $availability = (!empty($openDays) || $openTime || $closeTime)
+        ? json_encode(['open_days' => array_values($openDays), 'open_time' => $openTime ?: null, 'close_time' => $closeTime ?: null])
+        : null;
 
     $validTypes = ['accommodation','tour_package','restaurant','transport','event','other'];
 
@@ -51,14 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $pdo->prepare(
                 'UPDATE provider_listings
-                 SET listing_title=?, listing_type=?, description=?, price=?, price_label=?, contact_number=?, updated_at=NOW()
+                 SET listing_title=?, listing_type=?, description=?, price=?, price_label=?, contact_number=?, capacity=?, availability=?, updated_at=NOW()
                  WHERE id=?'
             );
-            $stmt->execute([$title, $listingType, $description, $price, $priceLabel ?: null, $contact, $listingId]);
+            $stmt->execute([$title, $listingType, $description, $price, $priceLabel ?: null, $contact, $capacity, $availability, $listingId]);
             $listing = array_merge($listing, [
                 'listing_title' => $title, 'listing_type' => $listingType,
                 'description' => $description, 'price' => $price,
-                'price_label' => $priceLabel, 'contact_number' => $contact
+                'price_label' => $priceLabel, 'contact_number' => $contact,
+                'capacity' => $capacity, 'availability' => $availability,
             ]);
             $success = true;
         } catch (Exception $e) {
@@ -124,6 +132,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="rf-g mb16">
         <label class="rf-lbl">Contact Number</label>
         <input class="rf-ctrl" type="text" name="contact_number" value="<?php echo escape($listing['contact_number'] ?? ''); ?>">
+      </div>
+      <div class="rf-g mb16">
+        <label class="rf-lbl">Capacity (max guests / pax, optional)</label>
+        <input class="rf-ctrl" type="number" name="capacity" min="1" value="<?php echo $listing['capacity'] ?? ''; ?>">
+      </div>
+      <?php
+        $avail = ($listing['availability'] ?? null) ? json_decode($listing['availability'], true) : [];
+        $existingDays = $avail['open_days'] ?? [];
+      ?>
+      <div class="rf-g mb16">
+        <label class="rf-lbl">Operating Hours</label>
+        <div style="display:flex;gap:8px;">
+          <input class="rf-ctrl" type="time" name="open_time" value="<?php echo escape($avail['open_time'] ?? ''); ?>">
+          <input class="rf-ctrl" type="time" name="close_time" value="<?php echo escape($avail['close_time'] ?? ''); ?>">
+        </div>
+      </div>
+      <div class="rf-g mb16">
+        <label class="rf-lbl">Open Days</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+          <?php foreach (['mon'=>'Mon','tue'=>'Tue','wed'=>'Wed','thu'=>'Thu','fri'=>'Fri','sat'=>'Sat','sun'=>'Sun'] as $val => $lbl): ?>
+          <label style="display:flex;align-items:center;gap:4px;font-size:.85rem;">
+            <input type="checkbox" name="open_days[]" value="<?php echo $val; ?>" <?php echo in_array($val, $existingDays) ? 'checked' : ''; ?>> <?php echo $lbl; ?>
+          </label>
+          <?php endforeach; ?>
+        </div>
       </div>
       <button class="rf-go" type="submit">Save Changes</button>
     </form>
