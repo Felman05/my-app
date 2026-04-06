@@ -35,6 +35,10 @@ $statusLabels = [
     <a href="/doon-app/local/listing-create.php" class="s-btn green">+ New Listing</a>
   </div>
 
+  <?php if (isset($_GET['updated'])): ?>
+  <div class="alert ok" style="margin-bottom:12px;">Listing updated successfully.</div>
+  <?php endif; ?>
+
   <section class="dc">
     <div class="dest-list">
       <?php foreach ($listings as $list): ?>

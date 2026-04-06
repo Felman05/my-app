@@ -141,4 +141,3 @@ function jsonResponse($success, $data = null, $error = '') {
         'error'   => $error
     ]);
 }
-?>

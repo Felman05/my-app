@@ -30,8 +30,7 @@ if (!$listing) {
     exit;
 }
 
-$error   = '';
-$success = false;
+$error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title       = trim($_POST['listing_title'] ?? '');
@@ -62,13 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE id=?'
             );
             $stmt->execute([$title, $listingType, $description, $price, $priceLabel ?: null, $contact, $capacity, $availability, $listingId]);
-            $listing = array_merge($listing, [
-                'listing_title' => $title, 'listing_type' => $listingType,
-                'description' => $description, 'price' => $price,
-                'price_label' => $priceLabel, 'contact_number' => $contact,
-                'capacity' => $capacity, 'availability' => $availability,
-            ]);
-            $success = true;
+            header('Location: /doon-app/local/listings.php?updated=1');
+            exit;
         } catch (Exception $e) {
             $error = 'Failed to update listing.';
         }
@@ -84,9 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a class="s-btn dark" href="/doon-app/local/listings.php">Back</a>
   </div>
 
-  <?php if ($success): ?>
-  <div class="alert ok" style="margin-bottom:12px;">Listing updated.</div>
-  <?php endif; ?>
   <?php if ($error): ?>
   <div class="alert err" style="margin-bottom:12px;"><?php echo escape($error); ?></div>
   <?php endif; ?>

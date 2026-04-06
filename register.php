@@ -38,7 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($password)) $errors[] = 'Password is required.';
     if ($password !== $confirmPassword) $errors[] = 'Passwords do not match.';
     if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters.';
-    if (!in_array($role, ['tourist', 'local'])) $errors[] = 'Invalid role.';
+    $role = 'tourist'; // Public registration is tourist-only; providers are created by admin
+    if (!in_array($role, ['tourist'])) $errors[] = 'Invalid role.';
 
     // Check if email exists
     if (empty($errors)) {
@@ -106,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $formData = [
         'name'  => $name,
         'email' => $email,
-        'role'  => in_array($role, ['tourist', 'local']) ? $role : 'tourist'
+        'role'  => 'tourist',
     ];
 }
 ?>
@@ -140,13 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php endif; ?>
 
       <form method="POST">
-        <div class="form-group">
-          <label class="form-label" for="role">I am a</label>
-          <select class="form-input form-select" id="role" name="role" required>
-            <option value="tourist" <?php echo $formData['role'] === 'tourist' ? 'selected' : ''; ?>>Tourist</option>
-            <option value="local" <?php echo $formData['role'] === 'local' ? 'selected' : ''; ?>>Local Provider</option>
-          </select>
-        </div>
+        <input type="hidden" name="role" value="tourist">
         <div class="form-group">
           <label class="form-label" for="name">Full Name</label>
           <input class="form-input" type="text" id="name" name="name" value="<?php echo escape($formData['name']); ?>" required placeholder="John Doe">

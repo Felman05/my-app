@@ -150,13 +150,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if ($isFavorited) {
             $stmt = $pdo->prepare('DELETE FROM favorites WHERE user_id = ? AND destination_id = ?');
             $stmt->execute([$currentUser['id'], $destId]);
-            $isFavorited = false;
         } else {
             $stmt = $pdo->prepare('INSERT INTO favorites (user_id, destination_id, created_at) VALUES (?, ?, NOW())');
             $stmt->execute([$currentUser['id'], $destId]);
-            $isFavorited = true;
         }
     } catch (PDOException $e) {}
+    // PRG: redirect to prevent double-submit on refresh
+    header('Location: /doon-app/tourist/destination.php?id=' . $destId);
+    exit;
 }
 ?>
 
