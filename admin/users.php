@@ -12,11 +12,12 @@ try {
 }
 ?>
 <?php include '../includes/header.php'; ?>
-<div class="dashboard-layout">
+<div class="d-wrap">
 <?php include '../includes/sidebar.php'; ?>
-<main class="main-content">
-<h1>Manage Users</h1>
-<div style="overflow-x: auto;">
+<main class="d-main">
+  <div class="d-topbar"><div><h1 class="d-page-title">Manage Users</h1><p class="d-page-sub">All registered user accounts.</p></div></div>
+  <section class="dc">
+  <div style="overflow-x: auto;">
 <table style="width: 100%; border-collapse: collapse;">
 <thead>
 <tr style="border-bottom: 2px solid var(--bd);">
@@ -40,8 +41,9 @@ try {
 </tbody>
 </table>
 </div>
+  </section>
 </main>
 </div>
-<link rel="stylesheet" href="/doon-app/assets/css/main.css">
+
 <script src="/doon-app/assets/js/main.js"></script>
 <?php include '../includes/footer.php'; ?>

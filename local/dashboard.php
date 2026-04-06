@@ -9,7 +9,11 @@ try {
     $stmt = $pdo->prepare('SELECT * FROM local_provider_profiles WHERE user_id = ?');
     $stmt->execute([$currentUser['id']]);
     $profile = $stmt->fetch();
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM provider_listings WHERE user_id = ?');
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM provider_listings pl
+         JOIN local_provider_profiles lpp ON pl.provider_id = lpp.id
+         WHERE lpp.user_id = ?'
+    );
     $stmt->execute([$currentUser['id']]);
     $listingCount = $stmt->fetchColumn();
 } catch (Exception $e) {

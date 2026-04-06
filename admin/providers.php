@@ -4,40 +4,91 @@ require_once '../includes/auth.php';
 requireRole('admin');
 $pageTitle = 'Manage Providers';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
+
+// Handle approve / reject POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $listingId = (int) ($_POST['listing_id'] ?? 0);
+    $action    = $_POST['action'] ?? '';
+
+    if ($listingId && in_array($action, ['approve', 'reject'])) {
+        $newStatus = $action === 'approve' ? 'active' : 'rejected';
+        $reason    = $action === 'reject' ? trim($_POST['rejection_reason'] ?? 'Does not meet listing standards.') : null;
+        try {
+            $stmt = $pdo->prepare(
+                'UPDATE provider_listings
+                 SET status = ?, rejection_reason = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
+                 WHERE id = ?'
+            );
+            $stmt->execute([$newStatus, $reason, $_SESSION['user_id'], $listingId]);
+        } catch (Exception $e) {}
+    }
+    header('Location: /doon-app/admin/providers.php');
+    exit;
+}
+
 try {
-    $stmt = $pdo->query('SELECT pl.*, u.name, u.email FROM provider_listings pl JOIN users u ON pl.user_id = u.id WHERE pl.status = "pending" ORDER BY pl.created_at DESC');
-    $pending = $stmt->fetchAll();
+    $pending = $pdo->query(
+        'SELECT pl.id, pl.listing_title, pl.listing_type, pl.description, pl.price_label, pl.status, pl.created_at,
+                u.name AS provider_name, u.email AS provider_email
+         FROM provider_listings pl
+         JOIN local_provider_profiles lpp ON pl.provider_id = lpp.id
+         JOIN users u ON lpp.user_id = u.id
+         WHERE pl.status = "pending"
+         ORDER BY pl.created_at DESC'
+    )->fetchAll();
 } catch (Exception $e) {
     $pending = [];
 }
 ?>
 <?php include '../includes/header.php'; ?>
-<div class="dashboard-layout">
+<div class="d-wrap">
 <?php include '../includes/sidebar.php'; ?>
-<main class="main-content">
-<h1>Pending Provider Approvals</h1>
-<div class="grid grid-2">
-<?php foreach ($pending as $p): ?>
-<div class="card">
-<h3 style="margin-top: 0;"><?php echo escape($p['title']); ?></h3>
-<p>By: <strong><?php echo escape($p['name']); ?></strong></p>
-<p style="color: var(--i3);"><?php echo escape($p['email']); ?></p>
-<div style="display: flex; gap: var(--sp2);">
-<button class="btn btn-accent btn-small" onclick="approveProvider(<?php echo $p['id']; ?>)">Approve</button>
-<button class="btn btn-secondary btn-small" onclick="rejectProvider(<?php echo $p['id']; ?>)">Reject</button>
-</div>
-</div>
-<?php endforeach; ?>
-</div>
-<?php if (empty($pending)): ?>
-<p style="color: var(--i3);">No pending approvals.</p>
-<?php endif; ?>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><h1 class="d-page-title">Pending Provider Listings</h1><p class="d-page-sub"><?php echo count($pending); ?> awaiting review.</p></div>
+  </div>
+
+  <section class="dc">
+    <div class="dest-list">
+      <?php foreach ($pending as $p): ?>
+      <div class="dest-row" style="flex-wrap:wrap;gap:8px;">
+        <div class="dest-ico">P</div>
+        <div style="flex:1;min-width:200px;">
+          <div class="dest-name"><?php echo escape($p['listing_title']); ?></div>
+          <div class="dest-meta"><?php echo ucfirst(str_replace('_', ' ', $p['listing_type'])); ?> &mdash; by <?php echo escape($p['provider_name']); ?> (<?php echo escape($p['provider_email']); ?>)</div>
+          <?php if (!empty($p['description'])): ?>
+          <div class="dest-meta" style="margin-top:4px;"><?php echo escape(mb_strimwidth($p['description'], 0, 120, '...')); ?></div>
+          <?php endif; ?>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <form method="POST" style="display:inline;">
+            <input type="hidden" name="listing_id" value="<?php echo (int) $p['id']; ?>">
+            <input type="hidden" name="action" value="approve">
+            <button class="s-btn green" type="submit">Approve</button>
+          </form>
+          <form method="POST" style="display:inline;" onsubmit="return confirmReject(this);">
+            <input type="hidden" name="listing_id" value="<?php echo (int) $p['id']; ?>">
+            <input type="hidden" name="action" value="reject">
+            <input type="hidden" name="rejection_reason" class="reject-reason" value="Does not meet listing standards.">
+            <button class="s-btn dark" type="submit">Reject</button>
+          </form>
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <?php if (empty($pending)): ?>
+      <div class="dest-row"><div>No pending listings.</div></div>
+      <?php endif; ?>
+    </div>
+  </section>
 </main>
 </div>
 <script>
-function approveProvider(id) { if (confirm('Approve this provider?')) { console.log('Approving provider ' + id); } }
-function rejectProvider(id) { if (confirm('Reject this provider?')) { console.log('Rejecting provider ' + id); } }
+function confirmReject(form) {
+  var reason = prompt('Rejection reason (optional):', 'Does not meet listing standards.');
+  if (reason === null) return false;
+  form.querySelector('.reject-reason').value = reason || 'Does not meet listing standards.';
+  return true;
+}
 </script>
-<link rel="stylesheet" href="/doon-app/assets/css/main.css">
 <script src="/doon-app/assets/js/main.js"></script>
 <?php include '../includes/footer.php'; ?>

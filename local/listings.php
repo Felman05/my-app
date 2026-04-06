@@ -5,36 +5,57 @@ requireRole('local');
 $currentUser = getCurrentUser();
 $pageTitle = 'My Listings';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
+
 try {
-    $stmt = $pdo->prepare('SELECT * FROM provider_listings WHERE user_id = ? ORDER BY created_at DESC');
+    $stmt = $pdo->prepare(
+        'SELECT pl.* FROM provider_listings pl
+         JOIN local_provider_profiles lpp ON pl.provider_id = lpp.id
+         WHERE lpp.user_id = ?
+         ORDER BY pl.created_at DESC'
+    );
     $stmt->execute([$currentUser['id']]);
     $listings = $stmt->fetchAll();
 } catch (Exception $e) {
     $listings = [];
 }
+
+$statusLabels = [
+    'pending'  => 'Pending Review',
+    'active'   => 'Active',
+    'inactive' => 'Inactive',
+    'rejected' => 'Rejected',
+];
 ?>
 <?php include '../includes/header.php'; ?>
-<div class="dashboard-layout">
+<div class="d-wrap">
 <?php include '../includes/sidebar.php'; ?>
-<main class="main-content">
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp4);">
-<h1 style="margin: 0;">My Listings</h1>
-<a href="/doon-app/local/listing-create.php" class="btn btn-accent">+ New Listing</a>
-</div>
-<div class="grid grid-2">
-<?php foreach ($listings as $list): ?>
-<div class="card">
-<h3 style="margin-top: 0;"><?php echo escape($list['title']); ?></h3>
-<p style="color: var(--i3);">Status: <strong><?php echo ucfirst($list['status']); ?></strong></p>
-<a href="/doon-app/local/listing-edit.php?id=<?php echo $list['id']; ?>" class="btn btn-secondary btn-small">Edit</a>
-</div>
-<?php endforeach; ?>
-</div>
-<?php if (empty($listings)): ?>
-<p style="color: var(--i3);">No listings yet. <a href="/doon-app/local/listing-create.php">Create one</a></p>
-<?php endif; ?>
+<main class="d-main">
+  <div class="d-topbar">
+    <div><h1 class="d-page-title">My Listings</h1><p class="d-page-sub">All your submitted listings.</p></div>
+    <a href="/doon-app/local/listing-create.php" class="s-btn green">+ New Listing</a>
+  </div>
+
+  <section class="dc">
+    <div class="dest-list">
+      <?php foreach ($listings as $list): ?>
+      <div class="dest-row">
+        <div class="dest-ico">L</div>
+        <div>
+          <div class="dest-name"><?php echo escape($list['listing_title']); ?></div>
+          <div class="dest-meta"><?php echo ucfirst(str_replace('_', ' ', $list['listing_type'])); ?> &mdash; <?php echo $statusLabels[$list['status']] ?? ucfirst($list['status']); ?></div>
+          <?php if ($list['status'] === 'rejected' && !empty($list['rejection_reason'])): ?>
+          <div class="dest-meta" style="color:var(--err);">Reason: <?php echo escape($list['rejection_reason']); ?></div>
+          <?php endif; ?>
+        </div>
+        <a href="/doon-app/local/listing-edit.php?id=<?php echo (int) $list['id']; ?>" class="s-btn dark">Edit</a>
+      </div>
+      <?php endforeach; ?>
+      <?php if (empty($listings)): ?>
+      <div class="dest-row"><div>No listings yet. <a href="/doon-app/local/listing-create.php">Create one</a></div></div>
+      <?php endif; ?>
+    </div>
+  </section>
 </main>
 </div>
-<link rel="stylesheet" href="/doon-app/assets/css/main.css">
 <script src="/doon-app/assets/js/main.js"></script>
 <?php include '../includes/footer.php'; ?>

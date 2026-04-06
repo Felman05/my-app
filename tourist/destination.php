@@ -36,7 +36,7 @@ try {
         exit;
     }
 
-    logAnalyticsEvent($pdo, $currentUser['id'], 'view_destination', ['destination_id' => $destId]);
+    logAnalyticsEvent($pdo, $currentUser['id'], 'destination_view', ['destination_id' => $destId]);
 
     $stmt = $pdo->prepare(
         'SELECT r.*, u.name FROM reviews r
@@ -55,9 +55,54 @@ try {
     $stmt->execute([$currentUser['id'], $destId]);
     $hasReviewed = $stmt->fetch() !== false;
 
+    // Load user's itineraries for the add-to-itinerary form
+    $stmt = $pdo->prepare('SELECT id, title, start_date FROM itineraries WHERE user_id = ? ORDER BY created_at DESC LIMIT 20');
+    $stmt->execute([$currentUser['id']]);
+    $userItineraries = $stmt->fetchAll();
+
 } catch (PDOException $e) {
     header('Location: /doon-app/tourist/discover.php');
     exit;
+}
+
+$itinerarySuccess = false;
+$itineraryError   = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_to_itinerary') {
+    $itId   = (int) ($_POST['itinerary_id'] ?? 0);
+    $dayNum = max(1, (int) ($_POST['day_number'] ?? 1));
+    $notes  = trim($_POST['notes'] ?? '');
+
+    if (!$itId) {
+        $itineraryError = 'Please select an itinerary.';
+    } else {
+        try {
+            // Verify the itinerary belongs to this user
+            $stmt = $pdo->prepare('SELECT id, total_days FROM itineraries WHERE id = ? AND user_id = ?');
+            $stmt->execute([$itId, $currentUser['id']]);
+            $itRow = $stmt->fetch();
+
+            if (!$itRow) {
+                $itineraryError = 'Invalid itinerary.';
+            } else {
+                $dayNum = min($dayNum, max(1, (int) $itRow['total_days']));
+                $stmt = $pdo->prepare(
+                    'SELECT COALESCE(MAX(order_index),0)+1 FROM itinerary_items WHERE itinerary_id = ? AND day_number = ?'
+                );
+                $stmt->execute([$itId, $dayNum]);
+                $nextOrder = (int) $stmt->fetchColumn();
+
+                $stmt = $pdo->prepare(
+                    'INSERT INTO itinerary_items (itinerary_id, destination_id, day_number, order_index, notes, created_at)
+                     VALUES (?, ?, ?, ?, ?, NOW())'
+                );
+                $stmt->execute([$itId, $destId, $dayNum, $nextOrder, $notes ?: null]);
+                $itinerarySuccess = true;
+            }
+        } catch (PDOException $e) {
+            $itineraryError = 'Failed to add to itinerary.';
+        }
+    }
 }
 
 $reviewError = '';
@@ -168,7 +213,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div class="bar-row"><div class="bar-lbl">Views</div><div class="bar-bg"><div class="bar-f" style="width:70%"></div></div><div class="bar-val"><?php echo number_format((int) ($destination['view_count'] ?? 0)); ?></div></div>
       </div>
       <div class="divider"></div>
-      <a class="s-btn green" href="/doon-app/tourist/itinerary-create.php?add_dest=<?php echo $destId; ?>">Add to itinerary</a>
+
+      <?php if ($itinerarySuccess): ?>
+      <div class="alert ok" style="margin-bottom:8px;">Added to itinerary!</div>
+      <?php endif; ?>
+      <?php if ($itineraryError): ?>
+      <div class="alert err" style="margin-bottom:8px;"><?php echo escape($itineraryError); ?></div>
+      <?php endif; ?>
+
+      <?php if (!empty($userItineraries)): ?>
+      <div class="dc-sub" style="margin-bottom:6px;">Add to existing itinerary</div>
+      <form method="POST" style="margin-bottom:10px;">
+        <input type="hidden" name="action" value="add_to_itinerary">
+        <select class="rf-ctrl" name="itinerary_id" style="margin-bottom:6px;">
+          <option value="">Select itinerary...</option>
+          <?php foreach ($userItineraries as $it): ?>
+          <option value="<?php echo (int) $it['id']; ?>"><?php echo escape($it['title']); ?></option>
+          <?php endforeach; ?>
+        </select>
+        <input class="rf-ctrl" type="number" name="day_number" min="1" value="1" placeholder="Day #" style="margin-bottom:6px;">
+        <button class="s-btn green" type="submit" style="width:100%;">Add Stop</button>
+      </form>
+      <?php endif; ?>
+
+      <a class="s-btn dark" href="/doon-app/tourist/itinerary-create.php?add_dest=<?php echo $destId; ?>" style="width:100%;text-align:center;display:block;">+ New itinerary with this stop</a>
     </aside>
   </div>
 </main>

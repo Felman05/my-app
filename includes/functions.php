@@ -118,12 +118,12 @@ function generateUUID() {
 function logAnalyticsEvent($pdo, $userId, $eventType, $data = []) {
     try {
         $stmt = $pdo->prepare(
-            'INSERT INTO analytics_events (user_id, event_type, event_data, created_at) 
+            'INSERT INTO analytics_events (user_id, event_type, metadata, created_at)
              VALUES (?, ?, ?, NOW())'
         );
         $stmt->execute([$userId, $eventType, json_encode($data)]);
     } catch (PDOException $e) {
-        // Silently fail if analytics logging fails
+        // Silently fail so analytics never breaks the main request
     }
 }
 

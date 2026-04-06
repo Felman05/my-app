@@ -79,10 +79,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // If local provider, create provider profile
             if ($role === 'local') {
                 $stmt = $pdo->prepare(
-                    'INSERT INTO local_provider_profiles (user_id, business_name, description, contact_number, is_verified, created_at)
-                     VALUES (?, ?, ?, ?, 0, NOW())'
+                    'INSERT INTO local_provider_profiles
+                        (user_id, business_name, business_type, province, municipality, address, description, contact_number, is_verified, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())'
                 );
-                $stmt->execute([$userId, $name, '', '', 0]);
+                $stmt->execute([$userId, $name, 'other', '', '', '', '', '']);
             }
 
             $pdo->commit();

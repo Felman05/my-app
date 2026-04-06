@@ -4,6 +4,7 @@ require_once '../includes/auth.php';
 requireRole('admin');
 $pageTitle = 'Manage Destinations';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
+
 try {
     $stmt = $pdo->query('SELECT d.id, d.name, d.province_id, d.is_active, d.is_featured, p.name as province_name FROM destinations d LEFT JOIN provinces p ON d.province_id = p.id ORDER BY d.created_at DESC LIMIT 50');
     $destinations = $stmt->fetchAll();
@@ -12,11 +13,12 @@ try {
 }
 ?>
 <?php include '../includes/header.php'; ?>
-<div class="dashboard-layout">
+<div class="d-wrap">
 <?php include '../includes/sidebar.php'; ?>
-<main class="main-content">
-<h1>Manage Destinations</h1>
-<div style="overflow-x: auto;">
+<main class="d-main">
+  <div class="d-topbar"><div><h1 class="d-page-title">Manage Destinations</h1><p class="d-page-sub">All active and inactive destination listings.</p></div></div>
+  <section class="dc">
+  <div style="overflow-x: auto;">
 <table style="width: 100%; border-collapse: collapse;">
 <thead>
 <tr style="border-bottom: 2px solid var(--bd);">
@@ -38,8 +40,9 @@ try {
 </tbody>
 </table>
 </div>
+  </section>
 </main>
 </div>
-<link rel="stylesheet" href="/doon-app/assets/css/main.css">
+
 <script src="/doon-app/assets/js/main.js"></script>
 <?php include '../includes/footer.php'; ?>
