@@ -16,6 +16,45 @@ try {
     $touristProfile = null;
 }
 
+// Behaviour signals: categories and provinces the user has viewed or saved
+try {
+    // Category IDs from destinations the user has viewed
+    $stmt = $pdo->prepare(
+        "SELECT d.category_id, COUNT(*) as cnt
+         FROM analytics_events ae
+         JOIN destinations d ON d.id = CAST(JSON_UNQUOTE(JSON_EXTRACT(ae.metadata,'$.destination_id')) AS UNSIGNED)
+         WHERE ae.user_id = ? AND ae.event_type = 'destination_view' AND d.category_id IS NOT NULL
+         GROUP BY d.category_id ORDER BY cnt DESC LIMIT 3"
+    );
+    $stmt->execute([$currentUser['id']]);
+    $viewedCategories = array_column($stmt->fetchAll(), 'category_id');
+
+    // Province IDs from destinations the user has saved
+    $stmt = $pdo->prepare(
+        'SELECT d.province_id, COUNT(*) as cnt
+         FROM favorites f
+         JOIN destinations d ON d.id = f.destination_id
+         WHERE f.user_id = ?
+         GROUP BY d.province_id ORDER BY cnt DESC LIMIT 1'
+    );
+    $stmt->execute([$currentUser['id']]);
+    $savedProvinceRow = $stmt->fetch();
+    $preferredProvinceId = $savedProvinceRow ? (int) $savedProvinceRow['province_id'] : null;
+
+    // Destination IDs already viewed (to avoid repeating them)
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT CAST(JSON_UNQUOTE(JSON_EXTRACT(metadata,'$.destination_id')) AS UNSIGNED) as dest_id
+         FROM analytics_events
+         WHERE user_id = ? AND event_type = 'destination_view'"
+    );
+    $stmt->execute([$currentUser['id']]);
+    $viewedDestIds = array_filter(array_column($stmt->fetchAll(), 'dest_id'));
+} catch (Exception $e) {
+    $viewedCategories = [];
+    $preferredProvinceId = null;
+    $viewedDestIds = [];
+}
+
 $provinces   = [];
 $categories  = [];
 $recommendations = [];
@@ -50,6 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $params[] = (int) $categoryId;
     }
 
+    // Exclude already-viewed destinations (show new places)
+    if (!empty($viewedDestIds)) {
+        $vp = implode(',', array_map('intval', $viewedDestIds));
+        $where[] = "d.id NOT IN ($vp)";
+    }
+
     // Generational appeal ordering via JSON_EXTRACT
     $orderBy = 'd.avg_rating DESC, d.view_count DESC';
     $genSelect = '';
@@ -59,7 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $orderBy   = 'gen_score DESC, d.avg_rating DESC';
     }
 
-    $sql = "SELECT d.*, p.name AS province_name $genSelect
+    // Behaviour boost: preferred category from view history (if user didn't pick a category)
+    $boostSelect = '';
+    if (!$categoryId && !empty($viewedCategories)) {
+        $catList     = implode(',', array_map('intval', $viewedCategories));
+        $boostSelect = ", IF(d.category_id IN ($catList), 1, 0) AS behaviour_boost";
+        $orderBy     = ($genProfile && in_array($genProfile, $validGen) ? 'gen_score DESC, ' : '') . 'behaviour_boost DESC, d.avg_rating DESC';
+    }
+
+    $sql = "SELECT d.*, p.name AS province_name $genSelect $boostSelect
             FROM destinations d
             LEFT JOIN provinces p ON d.province_id = p.id
             WHERE " . implode(' AND ', $where) . "
@@ -157,16 +210,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <div class="dc-title">Packing Suggestions</div>
       <div class="sub-lbl" style="margin-top:12px;" id="packingLabel">Based on your trip</div>
       <div class="pack-row" id="packingChips">
-        <span class="pack-chip ess">Water</span>
-        <span class="pack-chip ess">ID</span>
-        <span class="pack-chip">Sunscreen</span>
-        <span class="pack-chip">Umbrella</span>
+        <span class="pack-chip" style="opacity:.5;">Loading...</span>
       </div>
+      <div id="packingTip" style="display:none;font-size:.78rem;opacity:.7;margin-top:6px;font-style:italic;"></div>
     </section>
   </div>
 
   <section class="dc" style="margin-top:16px;">
-    <div class="dc-head"><div><div class="dc-title">Results</div><div class="dc-sub"><?php echo count($recommendations); ?> destination(s) found</div></div></div>
+    <div class="dc-head"><div><div class="dc-title">Results</div><div class="dc-sub"><?php echo count($recommendations); ?> destination(s) found<?php if (!empty($viewedCategories) && $_SERVER['REQUEST_METHOD'] === 'POST'): ?> &mdash; personalised from your activity<?php endif; ?></div></div></div>
     <div class="dest-list">
       <?php foreach ($recommendations as $rec): ?>
       <a href="/doon-app/tourist/destination.php?id=<?php echo $rec['id']; ?>" class="dest-row">
@@ -193,16 +244,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   var categoryId = <?php echo json_encode($_POST['category_id'] ?? ''); ?>;
   var chips = document.getElementById('packingChips');
   var label = document.getElementById('packingLabel');
-  if (!chips || !categoryId) return;
+  if (!chips) return;
 
-  fetch('/doon-app/api/packing.php?category_id=' + encodeURIComponent(categoryId), { credentials: 'same-origin' })
+  // Fetch live weather to pass condition into packing suggestions
+  fetch('/doon-app/api/weather.php?action=list', { credentials: 'same-origin' })
+    .then(function (r) { return r.json(); })
+    .then(function (wr) {
+      var condition = 'any';
+      if (wr.success && Array.isArray(wr.data)) {
+        wr.data.some(function (item) {
+          if (item.weather && item.weather.condition) { condition = item.weather.condition; return true; }
+        });
+      }
+      var url = '/doon-app/api/packing.php?weather=' + encodeURIComponent(condition);
+      if (categoryId) url += '&category_id=' + encodeURIComponent(categoryId);
+      return fetch(url, { credentials: 'same-origin' });
+    })
     .then(function (r) { return r.json(); })
     .then(function (res) {
       if (!res.success || !res.data || !res.data.length) return;
       label.textContent = res.label || 'Based on your trip';
       chips.innerHTML = res.data.map(function (item) {
-        return '<span class="pack-chip' + (item.essential ? ' ess' : '') + '">' + item.item + '</span>';
+        return '<span class="pack-chip' + (item.essential ? ' ess' : '') + '" title="' + (item.reason || '') + '">' + item.item + '</span>';
       }).join('');
+      var tipEl = document.getElementById('packingTip');
+      if (tipEl && res.wardrobe_tip) { tipEl.textContent = res.wardrobe_tip; tipEl.style.display = 'block'; }
     })
     .catch(function () {});
 }());

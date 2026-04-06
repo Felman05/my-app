@@ -171,13 +171,18 @@ try {
           <th>Itineraries</th>
           <th>Reviews</th>
           <th>Avg Rating</th>
+          <th>Demographics</th>
+          <th>Top Destinations</th>
         </tr>
       </thead>
       <tbody>
         <?php
+        $genLabels = ['gen_z' => 'Gen Z', 'millennial' => 'Millennial', 'gen_x' => 'Gen X', 'boomer' => 'Boomer'];
         $lastMonth = null;
         foreach ($reports as $r):
             $thisMonth = date('M Y', strtotime($r['report_month']));
+            $demo = $r['visitor_demographics'] ? json_decode($r['visitor_demographics'], true) : [];
+            $topDests = $r['top_destinations'] ? json_decode($r['top_destinations'], true) : [];
         ?>
         <tr>
           <td><?php echo $thisMonth !== $lastMonth ? $thisMonth : ''; $lastMonth = $thisMonth; ?></td>
@@ -187,6 +192,20 @@ try {
           <td><?php echo (int) $r['total_itineraries_created']; ?></td>
           <td><?php echo (int) $r['total_reviews']; ?></td>
           <td><?php echo $r['avg_destination_rating'] ? number_format((float) $r['avg_destination_rating'], 2) : '—'; ?></td>
+          <td style="font-size:.8rem;">
+            <?php if (!empty($demo)): ?>
+              <?php foreach ($demo as $gen => $cnt): ?>
+              <div><?php echo ($genLabels[$gen] ?? $gen) . ': ' . (int) $cnt; ?></div>
+              <?php endforeach; ?>
+            <?php else: ?>—<?php endif; ?>
+          </td>
+          <td style="font-size:.8rem;">
+            <?php if (!empty($topDests)): ?>
+              <?php foreach ($topDests as $td): ?>
+              <div><?php echo escape($td['name'] ?? ''); ?> (<?php echo (int) ($td['views'] ?? 0); ?>)</div>
+              <?php endforeach; ?>
+            <?php else: ?>—<?php endif; ?>
+          </td>
         </tr>
         <?php endforeach; ?>
       </tbody>

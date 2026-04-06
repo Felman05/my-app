@@ -147,6 +147,7 @@ try {
         <div>
           <div class="sub-lbl">Packing Essentials</div>
           <div class="pack-row" id="pack-chips"><span class="pack-chip" style="opacity:.5;">Loading...</span></div>
+          <div id="pack-tip" style="display:none;font-size:.78rem;opacity:.7;margin-top:6px;font-style:italic;"></div>
         </div>
       </section>
     </div>
@@ -180,6 +181,15 @@ try {
         grid.innerHTML = '<div class="wx-cell" style="grid-column:1/-1;opacity:.5;">Weather unavailable.</div>';
         return;
       }
+      // Use first available condition to refine packing suggestions
+      var firstCondition = null;
+      json.data.forEach(function (item) {
+        if (!firstCondition && item.weather && item.weather.condition) {
+          firstCondition = item.weather.condition;
+        }
+      });
+      if (firstCondition) { loadPackingChips(firstCondition); }
+
       grid.innerHTML = json.data.map(function (item) {
         var w = item.weather;
         if (!w) {
@@ -189,7 +199,7 @@ try {
         }
         return '<div class="wx-cell">'
           + '<span class="wx-ico">' + iconFor(w.condition) + '</span>'
-          + '<div class="wx-temp">' + (w.temp !== null ? w.temp + 'C' : '--') + '</div>'
+          + '<div class="wx-temp">' + (w.temp !== null ? w.temp + '°C' : '--') + '</div>'
           + '<div class="wx-loc">' + w.province + '</div>'
           + '<div class="wx-cond">' + w.condition + '</div>'
           + '</div>';
@@ -200,11 +210,13 @@ try {
     });
 }());
 
-// Dynamic packing chips
-(function () {
+// Dynamic packing chips — weather condition injected after weather widget loads
+var _packingWeather = 'any';
+function loadPackingChips(weatherCondition) {
   var chips = document.getElementById('pack-chips');
+  var tip   = document.getElementById('pack-tip');
   if (!chips) return;
-  fetch('/doon-app/api/packing.php')
+  fetch('/doon-app/api/packing.php?weather=' + encodeURIComponent(weatherCondition || 'any'))
     .then(function (r) { return r.json(); })
     .then(function (json) {
       if (!json.success || !Array.isArray(json.data) || !json.data.length) {
@@ -212,13 +224,18 @@ try {
         return;
       }
       chips.innerHTML = json.data.map(function (item) {
-        return '<span class="pack-chip' + (item.essential ? ' ess' : '') + '">' + item.item + '</span>';
+        return '<span class="pack-chip' + (item.essential ? ' ess' : '') + '" title="' + (item.reason || '') + '">' + item.item + '</span>';
       }).join('');
+      if (tip && json.wardrobe_tip) {
+        tip.textContent = json.wardrobe_tip;
+        tip.style.display = 'block';
+      }
     })
     .catch(function () {
       chips.innerHTML = '<span class="pack-chip" style="opacity:.5;">Unavailable.</span>';
     });
-}());
+}
+loadPackingChips('any'); // load immediately with generic
 </script>
 <?php include '../includes/footer.php'; ?>
 
