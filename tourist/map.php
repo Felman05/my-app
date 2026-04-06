@@ -53,10 +53,16 @@ try {
   <section class="dc mb20">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
       <button class="s-btn" id="btn-locate">Show My Location</button>
+      <select class="rf-ctrl" id="travel-mode" style="width:auto;padding:6px 10px;font-size:.85rem;" title="Travel mode for route planning">
+        <option value="DRIVING">🚗 Driving</option>
+        <option value="WALKING">🚶 Walking</option>
+        <option value="BICYCLING">🚲 Cycling</option>
+      </select>
       <button class="s-btn" id="btn-route" disabled title="Select at least 2 destinations from the list below to plan a route">Plan Route</button>
       <button class="s-btn" id="btn-clear-route" style="display:none;">Clear Route</button>
       <span id="route-info" style="font-size:.82rem;opacity:.6;"></span>
     </div>
+    <div style="font-size:.78rem;opacity:.55;margin-bottom:6px;">💡 Choose Walking or Cycling for an eco-friendly route.</div>
     <div id="touristMap" style="height:480px;border:1px solid var(--bd);border-radius:var(--r2);"></div>
   </section>
 
@@ -174,20 +180,25 @@ try {
       stopover: true
     }));
 
+    const modeSelect = document.getElementById('travel-mode');
+    const travelMode = google.maps.TravelMode[modeSelect ? modeSelect.value : 'DRIVING'];
+    const modeLabel  = modeSelect ? modeSelect.options[modeSelect.selectedIndex].text : 'Driving';
+
     directionsService.route({
       origin, destination,
       waypoints: middle,
-      travelMode: google.maps.TravelMode.DRIVING,
+      travelMode,
       optimizeWaypoints: true
     }, function (result, status) {
       if (status === 'OK') {
         directionsRenderer.setDirections(result);
         btnClear.style.display = 'inline-block';
-        // Summarise legs
         const legs = result.routes[0].legs;
         const totalDist = legs.reduce((s, l) => s + l.distance.value, 0);
         const totalTime = legs.reduce((s, l) => s + l.duration.value, 0);
-        routeInfo.textContent = 'Route: ' + (totalDist / 1000).toFixed(1) + ' km — ~' + Math.round(totalTime / 60) + ' min driving';
+        routeInfo.textContent = modeLabel + ' route: ' + (totalDist / 1000).toFixed(1) + ' km — ~' + Math.round(totalTime / 60) + ' min';
+      } else if (status === 'ZERO_RESULTS') {
+        routeInfo.textContent = 'No ' + modeLabel.toLowerCase() + ' route found between those stops. Try Driving.';
       } else {
         alert('Could not calculate route: ' + status);
       }

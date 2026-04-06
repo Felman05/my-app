@@ -32,10 +32,36 @@ try {
     <article class="kpi"><div class="kpi-lbl">Quick Link</div><div class="kpi-val">OPEN</div><div class="kpi-sub"><a href="/doon-app/local/listings.php">Manage listings</a></div></article>
   </section>
   <section class="dc">
-    <div class="dc-title">Performance Snapshot</div>
-    <div class="bar-list" style="margin-top:12px;">
-      <div class="bar-row"><div class="bar-lbl">Views</div><div class="bar-bg"><div class="bar-f ac" style="width:72%"></div></div><div class="bar-val">72</div></div>
-      <div class="bar-row"><div class="bar-lbl">Bookings</div><div class="bar-bg"><div class="bar-f" style="width:38%"></div></div><div class="bar-val">38</div></div>
+    <div class="dc-head"><div><div class="dc-title">Recent Listings</div></div><a class="s-btn" href="/doon-app/local/analytics.php">Full Analytics</a></div>
+    <div class="dest-list" style="margin-top:8px;">
+      <?php if ($profile): ?>
+      <?php
+        try {
+            $stmt2 = $pdo->prepare(
+                'SELECT pl.listing_title, pl.status, pl.listing_type FROM provider_listings pl
+                 JOIN local_provider_profiles lpp ON pl.provider_id = lpp.id
+                 WHERE lpp.user_id = ? ORDER BY pl.created_at DESC LIMIT 5'
+            );
+            $stmt2->execute([$currentUser['id']]);
+            $recentListings = $stmt2->fetchAll();
+        } catch (Exception $e) { $recentListings = []; }
+        foreach ($recentListings as $rl):
+      ?>
+      <div class="dest-row">
+        <div class="dest-ico">L</div>
+        <div>
+          <div class="dest-name"><?php echo escape($rl['listing_title']); ?></div>
+          <div class="dest-meta"><?php echo ucfirst(str_replace('_', ' ', $rl['listing_type'])); ?></div>
+        </div>
+        <span class="badge <?php echo $rl['status'] === 'active' ? 'badge-success' : ($rl['status'] === 'rejected' ? 'badge-danger' : 'badge-primary'); ?>">
+          <?php echo ucfirst($rl['status']); ?>
+        </span>
+      </div>
+      <?php endforeach; ?>
+      <?php if (empty($recentListings ?? [])): ?>
+      <div class="dest-row" style="opacity:.5;">No listings yet. <a href="/doon-app/local/listing-create.php">Create one.</a></div>
+      <?php endif; ?>
+      <?php endif; ?>
     </div>
   </section>
 </main>

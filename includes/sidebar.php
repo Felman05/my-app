@@ -47,6 +47,7 @@ function isActive($page) {
             <div class="sb-section">Management</div>
             <a href="/doon-app/local/listings.php" class="sb-item <?php echo isActive('listings.php'); ?>"><span class="sb-ico">L</span>My Listings</a>
             <a href="/doon-app/local/listing-create.php" class="sb-item <?php echo isActive('listing-create.php'); ?>"><span class="sb-ico">N</span>New Listing</a>
+            <a href="/doon-app/local/analytics.php" class="sb-item <?php echo isActive('analytics.php'); ?>"><span class="sb-ico">A</span>Analytics</a>
 
             <div class="sb-section">Account</div>
             <a href="/doon-app/local/profile.php" class="sb-item <?php echo isActive('profile.php'); ?>"><span class="sb-ico">P</span>Profile</a>
@@ -61,6 +62,7 @@ function isActive($page) {
             <a href="/doon-app/admin/destinations.php" class="sb-item <?php echo isActive('destinations.php'); ?>"><span class="sb-ico">T</span>Destinations</a>
             <a href="/doon-app/admin/providers.php" class="sb-item <?php echo isActive('providers.php'); ?>"><span class="sb-ico">V</span>Providers</a>
             <a href="/doon-app/admin/users.php" class="sb-item <?php echo isActive('users.php'); ?>"><span class="sb-ico">U</span>Users</a>
+            <a href="/doon-app/admin/reviews.php" class="sb-item <?php echo isActive('reviews.php'); ?>"><span class="sb-ico">R</span>Reviews</a>
 
             <div class="sb-section">Analytics</div>
             <a href="/doon-app/admin/analytics.php" class="sb-item <?php echo isActive('analytics.php'); ?>"><span class="sb-ico">A</span>Analytics</a>
