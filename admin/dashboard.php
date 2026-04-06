@@ -8,8 +8,35 @@ try {
     $userCount = $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
     $destCount = $pdo->query('SELECT COUNT(*) FROM destinations')->fetchColumn();
     $provCount = $pdo->query('SELECT COUNT(*) FROM provider_listings WHERE status = "pending"')->fetchColumn();
+
+    // Traffic snapshot: real event counts
+    $viewCount  = $pdo->query('SELECT COUNT(*) FROM analytics_events WHERE event_type = "destination_view"')->fetchColumn();
+    $itinCount  = $pdo->query('SELECT COUNT(*) FROM analytics_events WHERE event_type = "itinerary_created"')->fetchColumn();
+    $recCount   = $pdo->query('SELECT COUNT(*) FROM recommendation_requests')->fetchColumn();
+
+    // Pending listings for approval queue
+    $pendingListings = $pdo->query(
+        'SELECT pl.id, pl.listing_title, pl.listing_type, pl.created_at,
+                lpp.business_name, lpp.municipality, lpp.province
+         FROM provider_listings pl
+         JOIN local_provider_profiles lpp ON pl.provider_id = lpp.id
+         ORDER BY pl.created_at ASC
+         LIMIT 5'
+    )->fetchAll();
+
+    // Destination counts per province
+    $provinceCounts = $pdo->query(
+        'SELECT p.name, COUNT(d.id) as cnt
+         FROM provinces p
+         LEFT JOIN destinations d ON d.province_id = p.id AND d.is_active = 1
+         GROUP BY p.id, p.name ORDER BY cnt DESC'
+    )->fetchAll();
+
 } catch (Exception $e) {
     $userCount = $destCount = $provCount = 0;
+    $viewCount = $itinCount = $recCount = 0;
+    $pendingListings = [];
+    $provinceCounts = [];
 }
 ?>
 <?php include '../includes/header.php'; ?>
@@ -27,30 +54,57 @@ try {
 
   <div class="g2">
     <section class="dc">
-      <div class="dc-head"><div><div class="dc-title">Traffic Snapshot</div><div class="dc-sub">Mock analytics bars</div></div></div>
-      <div class="bar-list">
-        <div class="bar-row"><div class="bar-lbl">Web</div><div class="bar-bg"><div class="bar-f ac" style="width:84%"></div></div><div class="bar-val">84</div></div>
-        <div class="bar-row"><div class="bar-lbl">App</div><div class="bar-bg"><div class="bar-f" style="width:47%"></div></div><div class="bar-val">47</div></div>
-        <div class="bar-row"><div class="bar-lbl">API</div><div class="bar-bg"><div class="bar-f" style="width:63%"></div></div><div class="bar-val">63</div></div>
+      <div class="dc-head"><div><div class="dc-title">Platform Activity</div><div class="dc-sub">Cumulative event counts</div></div></div>
+      <?php
+        $maxStat = max(1, $viewCount, $itinCount, $recCount);
+        $stats = [
+            ['Destination Views', $viewCount,  'ac'],
+            ['Itineraries Created', $itinCount, ''],
+            ['Recommendations',   $recCount,   ''],
+        ];
+      ?>
+      <div class="bar-list" style="margin-top:8px;">
+        <?php foreach ($stats as [$lbl, $val, $cls]): $pct = round(($val / $maxStat) * 100); ?>
+        <div class="bar-row">
+          <div class="bar-lbl" style="width:150px;"><?php echo $lbl; ?></div>
+          <div class="bar-bg"><div class="bar-f <?php echo $cls; ?>" style="width:<?php echo $pct; ?>%"></div></div>
+          <div class="bar-val"><?php echo number_format((int) $val); ?></div>
+        </div>
+        <?php endforeach; ?>
       </div>
       <div class="divider"></div>
-      <div class="alert warn">Review seasonal traffic spikes before campaign launch.</div>
-      <div class="alert info">Daily report generation is healthy.</div>
+      <div class="dc-title" style="margin-bottom:6px;font-size:.8rem;">Active Destinations by Province</div>
+      <?php
+        $maxProv = max(1, ...array_column($provinceCounts, 'cnt') ?: [1]);
+      ?>
+      <div class="bar-list">
+        <?php foreach ($provinceCounts as $row): $pct = round(($row['cnt'] / $maxProv) * 100); ?>
+        <div class="bar-row">
+          <div class="bar-lbl" style="width:90px;"><?php echo escape($row['name']); ?></div>
+          <div class="bar-bg"><div class="bar-f" style="width:<?php echo $pct; ?>%"></div></div>
+          <div class="bar-val"><?php echo (int) $row['cnt']; ?></div>
+        </div>
+        <?php endforeach; ?>
+      </div>
     </section>
 
     <section class="dc">
-      <div class="dc-head"><div><div class="dc-title">Approval Queue</div><div class="dc-sub">Pending provider approvals</div></div></div>
-      <div class="appr-item"><div><div class="appr-name">North Ridge Tours</div><div class="appr-meta">Tagaytay  -  submitted today</div></div><div class="appr-btns"><button class="btn-ok">Approve</button><button class="btn-no">Reject</button></div></div>
-      <div class="appr-item"><div><div class="appr-name">Calamba Nature Walks</div><div class="appr-meta">Laguna  -  submitted yesterday</div></div><div class="appr-btns"><button class="btn-ok">Approve</button><button class="btn-no">Reject</button></div></div>
-      <div class="divider"></div>
-      <table class="d-table">
-        <thead><tr><th>LGU</th><th>Destinations</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Batangas</td><td>124</td><td><span class="pill p-g">Healthy</span></td></tr>
-          <tr><td>Laguna</td><td>98</td><td><span class="pill p-y">Monitor</span></td></tr>
-          <tr><td>Cavite</td><td>84</td><td><span class="pill p-g">Healthy</span></td></tr>
-        </tbody>
-      </table>
+      <div class="dc-head"><div><div class="dc-title">Approval Queue</div><div class="dc-sub">Pending provider listings</div></div><a class="s-btn" href="/doon-app/admin/providers.php">View all</a></div>
+      <?php if (empty($pendingListings)): ?>
+      <div class="dest-row" style="opacity:.5;">No pending listings.</div>
+      <?php else: ?>
+      <?php foreach ($pendingListings as $pl): ?>
+      <div class="appr-item">
+        <div>
+          <div class="appr-name"><?php echo escape($pl['listing_title']); ?></div>
+          <div class="appr-meta"><?php echo escape($pl['business_name']); ?> &mdash; <?php echo escape($pl['municipality'] . ', ' . $pl['province']); ?></div>
+        </div>
+        <div class="appr-btns">
+          <a class="btn-ok" href="/doon-app/admin/providers.php">Review</a>
+        </div>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
     </section>
   </div>
 </main>

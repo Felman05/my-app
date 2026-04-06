@@ -43,11 +43,17 @@ try {
     $stmt->execute([$currentUser['id']]);
     $recentReviews = $stmt->fetchAll();
 
+    // For quick recommendation form
+    $provinces   = $pdo->query('SELECT id, name FROM provinces ORDER BY name')->fetchAll();
+    $categories  = $pdo->query('SELECT id, name FROM activity_categories ORDER BY name')->fetchAll();
+
 } catch (PDOException $e) {
     $profile = null;
     $favCount = 0;
     $itineraryCount = 0;
     $recentReviews = [];
+    $provinces = [];
+    $categories = [];
 }
 ?>
 
@@ -78,11 +84,26 @@ try {
       <section class="dc">
         <div class="dc-head"><div><div class="dc-title">Quick Recommendation</div><div class="dc-sub">Get a filtered shortlist</div></div></div>
         <form class="rec-form" action="/doon-app/tourist/recommend.php" method="POST">
-          <div class="rf-g"><label class="rf-lbl">Budget</label><select class="rf-ctrl" name="budget"><option value="free">Free</option><option value="budget">Budget</option><option value="mid_range">Mid range</option><option value="luxury">Luxury</option></select></div>
-          <div class="rf-g"><label class="rf-lbl">Province</label><select class="rf-ctrl" name="province_id"><option value="">Any</option></select></div>
-          <div class="rf-g"><label class="rf-lbl">Category</label><select class="rf-ctrl" name="category_id"><option value="">Any</option></select></div>
-          <div class="rf-g"><label class="rf-lbl">Travel Style</label><select class="rf-ctrl"><option>Adventure</option><option>Leisure</option></select></div>
-          <div class="rf-g"><label class="rf-lbl">Companion</label><select class="rf-ctrl"><option>Solo</option><option>Family</option></select></div>
+          <div class="rf-g"><label class="rf-lbl">Budget</label><select class="rf-ctrl" name="budget"><option value="">Any</option><option value="free">Free</option><option value="budget">Budget</option><option value="mid_range">Mid range</option><option value="luxury">Luxury</option></select></div>
+          <div class="rf-g"><label class="rf-lbl">Province</label><select class="rf-ctrl" name="province_id">
+            <option value="">Any</option>
+            <?php foreach ($provinces as $p): ?>
+            <option value="<?php echo $p['id']; ?>"><?php echo escape($p['name']); ?></option>
+            <?php endforeach; ?>
+          </select></div>
+          <div class="rf-g"><label class="rf-lbl">Category</label><select class="rf-ctrl" name="category_id">
+            <option value="">Any</option>
+            <?php foreach ($categories as $c): ?>
+            <option value="<?php echo $c['id']; ?>"><?php echo escape($c['name']); ?></option>
+            <?php endforeach; ?>
+          </select></div>
+          <div class="rf-g"><label class="rf-lbl">Generation</label><select class="rf-ctrl" name="generational_profile">
+            <option value="">Any</option>
+            <option value="gen_z" <?php echo ($profile['generational_profile'] ?? '') === 'gen_z' ? 'selected' : ''; ?>>Gen Z</option>
+            <option value="millennial" <?php echo ($profile['generational_profile'] ?? '') === 'millennial' ? 'selected' : ''; ?>>Millennial</option>
+            <option value="gen_x" <?php echo ($profile['generational_profile'] ?? '') === 'gen_x' ? 'selected' : ''; ?>>Gen X</option>
+            <option value="boomer" <?php echo ($profile['generational_profile'] ?? '') === 'boomer' ? 'selected' : ''; ?>>Boomer</option>
+          </select></div>
           <button class="rf-go" type="submit">Generate</button>
         </form>
       </section>
