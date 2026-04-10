@@ -44,8 +44,8 @@ if ($priceRange && in_array($priceRange, ['free', 'budget', 'mid_range', 'luxury
 
 if ($search) {
     $where[] = '(d.name LIKE ? OR d.short_description LIKE ?)';
-    $params[] = '%' . $search . '%';
-    $params[] = '%' . $search . '%';
+    $params[] = "%{$search}%";
+    $params[] = "%{$search}%";
 }
 
 $whereClause = 'WHERE ' . implode(' AND ', $where);
@@ -59,7 +59,9 @@ try {
 
     // Get destinations
     $stmt = $pdo->prepare(
-        "SELECT d.*, ac.name as category_name, p.name as province_name
+        "SELECT d.id, d.name, d.short_description, d.avg_rating, d.view_count,
+                d.price_label, d.cover_image,
+                ac.name as category_name, p.name as province_name
          FROM destinations d
          LEFT JOIN activity_categories ac ON d.category_id = ac.id
          LEFT JOIN provinces p ON d.province_id = p.id
@@ -102,16 +104,32 @@ try {
   <section class="dest-list">
     <?php foreach ($destinations as $dest): ?>
       <a class="dest-row" href="/doon-app/tourist/destination.php?id=<?php echo $dest['id']; ?>">
+        <?php if ($dest['cover_image']): ?>
+        <img src="<?php echo escape($dest['cover_image']); ?>" alt="<?php echo escape($dest['name']); ?>"
+             style="width:52px;height:44px;object-fit:cover;border-radius:var(--r);flex-shrink:0;border:1px solid var(--bd);">
+        <?php else: ?>
         <div class="dest-ico">D</div>
+        <?php endif; ?>
         <div>
           <div class="dest-name"><?php echo escape($dest['name']); ?></div>
-          <div class="dest-meta"><?php echo escape($dest['province_name']); ?>  -  <?php echo escape($dest['category_name']); ?>  -  <?php echo escape($dest['price_label'] ?? 'Price on request'); ?></div>
+          <div class="dest-meta"><?php echo escape($dest['province_name']); ?> &mdash; <?php echo escape($dest['category_name']); ?> &mdash; <?php echo escape(getPriceRangeLabel($dest['price_label'] ?? '')); ?></div>
         </div>
-        <div class="dest-rating">? <?php echo number_format((float) ($dest['avg_rating'] ?? 0), 1); ?></div>
+        <div class="dest-rating">&#9733; <?php echo number_format((float) ($dest['avg_rating'] ?? 0), 1); ?></div>
       </a>
     <?php endforeach; ?>
     <?php if (empty($destinations)): ?><div class="dest-row"><div>No destinations matched your filters.</div></div><?php endif; ?>
   </section>
+
+  <?php if ($totalPages > 1): ?>
+  <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+    <a class="s-btn <?php echo $i === $page ? 'dark' : ''; ?>"
+       href="?page=<?php echo $i; ?>&province_id=<?php echo urlencode($provinceId ?? ''); ?>&category_id=<?php echo urlencode($categoryId ?? ''); ?>&price_range=<?php echo urlencode($priceRange ?? ''); ?>&search=<?php echo urlencode($search); ?>">
+      <?php echo $i; ?>
+    </a>
+    <?php endfor; ?>
+  </div>
+  <?php endif; ?>
 </main>
 </div>
 <script src="/doon-app/assets/js/main.js"></script>

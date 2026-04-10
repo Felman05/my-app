@@ -51,7 +51,7 @@ try {
   <section class="dc">
     <div class="dest-list">
       <?php foreach ($pending as $p): ?>
-      <div class="dest-row" style="flex-wrap:wrap;gap:8px;">
+      <div class="dest-row" style="flex-wrap:wrap;gap:12px;align-items:flex-start;">
         <div class="dest-ico">P</div>
         <div style="flex:1;min-width:200px;">
           <div class="dest-name"><?php echo escape($p['listing_title']); ?></div>

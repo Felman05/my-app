@@ -3,6 +3,13 @@
 
 # Database dumps
 config/*.sql
+includes/*.sql
+
+# Uploaded user content
+uploads/
+
+# Claude Code local settings
+.claude/
 
 # OS / editor artifacts
 .DS_Store

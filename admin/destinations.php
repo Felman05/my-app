@@ -1,6 +1,8 @@
 <?php
 require_once '../includes/db.php';
 require_once '../includes/auth.php';
+require_once '../includes/functions.php';
+require_once '../includes/env.php';
 requireRole('admin');
 $pageTitle = 'Manage Destinations';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
@@ -44,12 +46,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dest'])) {
     } else {
         $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $name)) . '-' . time();
         try {
+            $newImages  = uploadImages('destinations', 10);
+            $coverImage = $newImages[0] ?? null;
+            $imagesJson = !empty($newImages) ? json_encode($newImages) : null;
             $pdo->prepare(
                 'INSERT INTO destinations
                     (province_id, category_id, name, slug, short_description, description, address,
-                     latitude, longitude, price_label, contact_number, is_active, is_featured, is_verified, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())'
-            )->execute([$provinceId, $categoryId, $name, $slug, $shortDesc, $desc, $address, $lat, $lng, $priceLabel, $contact, $isActive, $isFeatured]);
+                     latitude, longitude, price_label, contact_number, cover_image, images,
+                     is_active, is_featured, is_verified, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())'
+            )->execute([$provinceId, $categoryId, $name, $slug, $shortDesc, $desc, $address, $lat, $lng, $priceLabel, $contact, $coverImage, $imagesJson, $isActive, $isFeatured]);
             $message = 'Destination "' . htmlspecialchars($name) . '" added.';
         } catch (Exception $e) {
             $error = 'Failed to add destination: ' . $e->getMessage();
@@ -60,7 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dest'])) {
 // ── Load data ─────────────────────────────────────────────────────────────
 try {
     $destinations = $pdo->query(
-        'SELECT d.id, d.name, d.province_id, d.is_active, d.is_featured,
+        'SELECT d.id, d.name, d.is_active, d.is_featured,
+                d.short_description, d.description, d.address,
+                d.latitude, d.longitude, d.price_label, d.contact_number,
+                d.cover_image, d.images, d.avg_rating, d.view_count,
                 p.name as province_name, ac.name as category_name
          FROM destinations d
          LEFT JOIN provinces p ON d.province_id = p.id
@@ -75,6 +84,8 @@ try {
     $provinces    = [];
     $categories   = [];
 }
+
+$gmKey = env('GOOGLE_MAPS_API_KEY', '');
 ?>
 <?php include '../includes/header.php'; ?>
 <div class="d-wrap">
@@ -91,7 +102,7 @@ try {
   <!-- Add form (hidden by default) -->
   <section class="dc" id="add-form" style="display:none;margin-bottom:16px;">
     <div class="dc-title" style="margin-bottom:12px;">New Destination</div>
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <input type="hidden" name="add_dest" value="1">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="rf-g"><label class="rf-lbl">Name *</label><input class="rf-ctrl" name="name" required></div>
@@ -123,6 +134,11 @@ try {
         <div class="rf-g" style="display:flex;align-items:center;gap:16px;margin-top:20px;">
           <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="is_active" checked> Active</label>
           <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="is_featured"> Featured</label>
+        </div>
+        <div class="rf-g" style="grid-column:1/-1;">
+          <label class="rf-lbl">Images (JPG/PNG/WebP, max 5 MB each)</label>
+          <input class="rf-ctrl" type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple style="padding:6px;">
+          <span style="font-size:.75rem;color:var(--i4);margin-top:4px;display:block;">First image becomes the cover photo shown on the destination page.</span>
         </div>
       </div>
       <button class="rf-go" type="submit" style="margin-top:12px;">Save Destination</button>
@@ -166,8 +182,24 @@ try {
                 </button>
               </form>
             </td>
-            <td>
-              <a class="s-btn" href="/doon-app/tourist/destination.php?id=<?php echo $d['id']; ?>" target="_blank" style="font-size:.78rem;">View</a>
+            <td style="white-space:nowrap;">
+              <a class="s-btn" href="/doon-app/admin/destination-edit.php?id=<?php echo $d['id']; ?>" style="padding:2px 8px;font-size:.78rem;">Edit</a>
+              <button class="s-btn view-dest-btn" type="button" style="padding:2px 8px;font-size:.78rem;margin-left:4px;"
+                data-id="<?php echo $d['id']; ?>"
+                data-name="<?php echo escape($d['name']); ?>"
+                data-province="<?php echo escape($d['province_name']); ?>"
+                data-category="<?php echo escape($d['category_name']); ?>"
+                data-short="<?php echo escape($d['short_description'] ?? ''); ?>"
+                data-desc="<?php echo escape($d['description'] ?? ''); ?>"
+                data-address="<?php echo escape($d['address'] ?? ''); ?>"
+                data-lat="<?php echo (float) ($d['latitude'] ?? 0); ?>"
+                data-lng="<?php echo (float) ($d['longitude'] ?? 0); ?>"
+                data-price="<?php echo escape($d['price_label'] ?? ''); ?>"
+                data-contact="<?php echo escape($d['contact_number'] ?? ''); ?>"
+                data-rating="<?php echo number_format((float) ($d['avg_rating'] ?? 0), 1); ?>"
+                data-views="<?php echo number_format((int) ($d['view_count'] ?? 0)); ?>"
+                data-cover="<?php echo escape($d['cover_image'] ?? ''); ?>"
+                data-gmkey="<?php echo escape($gmKey); ?>">View</button>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -177,5 +209,95 @@ try {
   </section>
 </main>
 </div>
+
+<!-- Destination detail modal -->
+<div id="dest-modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center;">
+  <div style="background:var(--wh,#fff);border-radius:var(--r2,10px);box-shadow:0 8px 40px rgba(0,0,0,.2);width:min(680px,94vw);max-height:90vh;overflow-y:auto;padding:28px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
+      <div>
+        <div id="dm-name" style="font-size:1.2rem;font-weight:700;color:var(--i);"></div>
+        <div id="dm-sub" style="font-size:.85rem;color:var(--i4);margin-top:2px;"></div>
+      </div>
+      <button id="dest-modal-close" class="s-btn dark" type="button" style="flex-shrink:0;margin-left:16px;">Close</button>
+    </div>
+    <div id="dm-map" style="margin-bottom:14px;"></div>
+    <div id="dm-body" style="display:grid;gap:8px;font-size:.88rem;"></div>
+  </div>
+</div>
+
 <script src="/doon-app/assets/js/main.js"></script>
+<script>
+(function () {
+  var backdrop = document.getElementById('dest-modal-backdrop');
+  var closeBtn = document.getElementById('dest-modal-close');
+
+  function openModal(btn) {
+    var d = btn.dataset;
+    document.getElementById('dm-name').textContent = d.name;
+    document.getElementById('dm-sub').textContent  = [d.province, d.category].filter(Boolean).join(' — ');
+
+    // Cover image
+    var mapEl = document.getElementById('dm-map');
+    if (d.cover) {
+      mapEl.innerHTML = '<img src="' + d.cover + '" alt="' + d.name + '" style="width:100%;height:200px;object-fit:cover;border-radius:var(--r2);display:block;margin-bottom:10px;">';
+    }
+
+    // Map (append after cover)
+    var lat = parseFloat(d.lat), lng = parseFloat(d.lng);
+    if (d.gmkey && lat && lng) {
+      mapEl.innerHTML += '<iframe width="100%" height="180" style="border:1px solid var(--bd);border-radius:var(--r2);display:block;" loading="lazy"'
+        + ' src="https://www.google.com/maps/embed/v1/view?key=' + encodeURIComponent(d.gmkey)
+        + '&center=' + lat + ',' + lng + '&zoom=15"></iframe>';
+    } else if (d.gmkey && d.name) {
+      mapEl.innerHTML += '<iframe width="100%" height="180" style="border:1px solid var(--bd);border-radius:var(--r2);display:block;" loading="lazy"'
+        + ' src="https://www.google.com/maps/embed/v1/place?key=' + encodeURIComponent(d.gmkey)
+        + '&q=' + encodeURIComponent(d.name + ', CALABARZON, Philippines') + '"></iframe>';
+    } else {
+      mapEl.innerHTML = '';
+    }
+
+    // Detail rows
+    var rows = [];
+    if (d.address)  rows.push(['Address',     d.address]);
+    if (d.contact)  rows.push(['Contact',     d.contact]);
+    if (d.price)    rows.push(['Price range', d.price.replace('_', ' ')]);
+    if (d.rating && d.rating !== '0.0') rows.push(['Avg rating', '★ ' + d.rating]);
+    if (d.views)    rows.push(['Views',       d.views]);
+    if (lat && lng) rows.push(['Coordinates', lat + ', ' + lng]);
+
+    var bodyEl = document.getElementById('dm-body');
+    bodyEl.innerHTML = rows.map(function (r) {
+      return '<div style="display:flex;gap:12px;">'
+        + '<span style="font-weight:600;min-width:110px;color:var(--i3);">' + r[0] + '</span>'
+        + '<span>' + r[1] + '</span></div>';
+    }).join('');
+
+    if (d.short) {
+      bodyEl.innerHTML += '<p style="margin-top:10px;color:var(--i2);">' + d.short + '</p>';
+    }
+    if (d.desc && d.desc !== d.short) {
+      bodyEl.innerHTML += '<p style="margin-top:6px;font-size:.82rem;color:var(--i3);">' + d.desc + '</p>';
+    }
+
+    backdrop.style.display = 'flex';
+  }
+
+  function closeModal() {
+    backdrop.style.display = 'none';
+    document.getElementById('dm-map').innerHTML = '';
+  }
+
+  document.querySelectorAll('.view-dest-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () { openModal(btn); });
+  });
+
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', function (e) {
+    if (e.target === backdrop) closeModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeModal();
+  });
+}());
+</script>
 <?php include '../includes/footer.php'; ?>

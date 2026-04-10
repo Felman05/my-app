@@ -43,7 +43,7 @@ function requireRole($requiredRole) {
     }
 
     $userRole = $_SESSION['role'] ?? 'tourist';
-    if ($userRole !== $requiredRole) {
+    if ($userRole !== $requiredRole && $userRole !== 'admin') {
         header('HTTP/1.0 403 Forbidden');
         die('Access denied.');
     }

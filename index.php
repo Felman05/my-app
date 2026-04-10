@@ -160,13 +160,13 @@ try {
 <?php if (!$currentUser): ?>
 <section class="section">
   <div class="section-head sr">
-    <div class="section-kicker">Roles</div>
+    <div class="section-kicker">Get Started</div>
     <h2 class="section-title">Join Doon</h2>
+    <p class="section-sub">Create a free account to start planning your CALABARZON adventure.</p>
   </div>
-  <div class="roles-grid">
-    <a class="role-card" href="/doon-app/register.php?role=tourist"><h3>Tourist</h3><p>Discover attractions, save favorites, and plan trips.</p></a>
-    <a class="role-card" href="/doon-app/register.php?role=local"><h3>Local Provider</h3><p>List experiences and connect with tourists.</p></a>
-    <a class="role-card" href="/doon-app/register.php?role=admin"><h3>LGU/Admin</h3><p>Monitor regional tourism data and approvals.</p></a>
+  <div class="roles-grid" style="grid-template-columns: repeat(2,1fr); max-width: 600px;">
+    <a class="role-card" href="/doon-app/register.php"><h3>Tourist</h3><p>Discover attractions, save favorites, and plan your perfect trip.</p></a>
+    <a class="role-card" href="/doon-app/login.php"><h3>Sign In</h3><p>Already have an account? Log in to access your dashboard.</p></a>
   </div>
 </section>
 <?php endif; ?>

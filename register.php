@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($password !== $confirmPassword) $errors[] = 'Passwords do not match.';
     if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters.';
     $role = 'tourist'; // Public registration is tourist-only; providers are created by admin
-    if (!in_array($role, ['tourist'])) $errors[] = 'Invalid role.';
 
     // Check if email exists
     if (empty($errors)) {
@@ -75,16 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      VALUES (?, ?, ?, ?, 0, NOW())'
                 );
                 $stmt->execute([$userId, 'millennial', 'mid_range', 'adventure']);
-            }
-
-            // If local provider, create provider profile
-            if ($role === 'local') {
-                $stmt = $pdo->prepare(
-                    'INSERT INTO local_provider_profiles
-                        (user_id, business_name, business_type, province, municipality, address, description, contact_number, is_verified, created_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW())'
-                );
-                $stmt->execute([$userId, $name, 'other', '', '', '', '', '']);
             }
 
             $pdo->commit();

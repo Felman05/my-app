@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/db.php';
 require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 requireRole('local');
 $currentUser = getCurrentUser();
 $pageTitle = 'Edit Listing';
@@ -12,7 +13,6 @@ if (!$listingId) {
     exit;
 }
 
-// Fetch listing (must belong to this provider)
 try {
     $stmt = $pdo->prepare(
         'SELECT pl.* FROM provider_listings pl
@@ -55,12 +55,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid listing type.';
     } else {
         try {
-            $stmt = $pdo->prepare(
+            $existingImages = ($listing['images'] ?? null) ? json_decode($listing['images'], true) : [];
+            $removeImages   = $_POST['remove_images'] ?? [];
+            $keptImages     = array_values(array_diff($existingImages, $removeImages));
+            $newImages      = uploadImages('listings', 5);
+            $finalImages    = array_slice(array_merge($keptImages, $newImages), 0, 5);
+            $imagesJson     = !empty($finalImages) ? json_encode($finalImages) : null;
+
+            $pdo->prepare(
                 'UPDATE provider_listings
-                 SET listing_title=?, listing_type=?, description=?, price=?, price_label=?, contact_number=?, capacity=?, availability=?, updated_at=NOW()
+                 SET listing_title=?, listing_type=?, description=?, images=?, price=?,
+                     price_label=?, contact_number=?, capacity=?, availability=?, updated_at=NOW()
                  WHERE id=?'
-            );
-            $stmt->execute([$title, $listingType, $description, $price, $priceLabel ?: null, $contact, $capacity, $availability, $listingId]);
+            )->execute([$title, $listingType, $description, $imagesJson, $price, $priceLabel ?: null, $contact, $capacity, $availability, $listingId]);
             header('Location: /doon-app/local/listings.php?updated=1');
             exit;
         } catch (Exception $e) {
@@ -68,6 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$avail        = ($listing['availability'] ?? null) ? json_decode($listing['availability'], true) : [];
+$existingDays = $avail['open_days'] ?? [];
+$existingImgs = ($listing['images'] ?? null) ? json_decode($listing['images'], true) : [];
 ?>
 <?php include '../includes/header.php'; ?>
 <div class="d-wrap">
@@ -84,13 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <?php if ($listing['status'] === 'rejected'): ?>
   <div class="alert err" style="margin-bottom:12px;">
-    This listing was rejected. <?php if ($listing['rejection_reason']): ?>Reason: <em><?php echo escape($listing['rejection_reason']); ?></em><?php endif; ?>
+    This listing was rejected.<?php if ($listing['rejection_reason']): ?> Reason: <em><?php echo escape($listing['rejection_reason']); ?></em><?php endif; ?>
     Edit and resubmit below.
   </div>
   <?php endif; ?>
 
   <section class="dc" style="max-width:640px;">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <div class="rf-g mb16">
         <label class="rf-lbl">Listing Title</label>
         <input class="rf-ctrl" type="text" name="listing_title" required value="<?php echo escape($listing['listing_title']); ?>">
@@ -128,10 +139,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label class="rf-lbl">Capacity (max guests / pax, optional)</label>
         <input class="rf-ctrl" type="number" name="capacity" min="1" value="<?php echo $listing['capacity'] ?? ''; ?>">
       </div>
-      <?php
-        $avail = ($listing['availability'] ?? null) ? json_decode($listing['availability'], true) : [];
-        $existingDays = $avail['open_days'] ?? [];
-      ?>
       <div class="rf-g mb16">
         <label class="rf-lbl">Operating Hours</label>
         <div style="display:flex;gap:8px;">
@@ -148,6 +155,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </label>
           <?php endforeach; ?>
         </div>
+      </div>
+
+      <?php if (!empty($existingImgs)): ?>
+      <div class="rf-g mb16">
+        <label class="rf-lbl">Current Photos</label>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;">
+          <?php foreach ($existingImgs as $imgPath): ?>
+          <div style="position:relative;width:100px;height:80px;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);">
+            <img src="<?php echo escape($imgPath); ?>" alt="Listing photo" style="width:100%;height:100%;object-fit:cover;">
+            <label style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 5px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:10px;color:#fff;">
+              <input type="checkbox" name="remove_images[]" value="<?php echo escape($imgPath); ?>" style="width:12px;height:12px;"> Remove
+            </label>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <span style="font-size:.75rem;color:var(--i4);margin-top:4px;display:block;">Check the box on any photo to remove it on save.</span>
+      </div>
+      <?php endif; ?>
+
+      <div class="rf-g mb16">
+        <label class="rf-lbl">Add Photos (JPG/PNG/WebP, max 5 MB each)</label>
+        <input class="rf-ctrl" type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple style="padding:6px;">
       </div>
       <button class="rf-go" type="submit">Save Changes</button>
     </form>

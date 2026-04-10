@@ -1,0 +1,483 @@
+                             Business Requirements
+Company Name
+Date
+Batangas State University ARASOF-Nasugbu, TNEU
+March 12, 2026
+Project Name
+Created By
+Doon: Smart Regional Activity Tracking and Recommendation System
+Adona, Linux Mandrake S.
+Bebita, Jessa Marie E.
+Eleponga, Felman I.
+Pagcaliwagan, Zeth Ramzy A.
+Villaflor, Djanisse N.
+
+                               Executive Summary
+This Business Requirements Document defines the requirements for the Doon: Smart Regional Activity Tracking and Recommendation System  --  an AI-powered web and mobile platform for the CALABARZON region developed at Batangas State University ARASOF-Nasugbu, TNEU. The project is managed by Asst. Prof. Benjie R. Samonte and sponsored by Asst. Prof. Arlene M. Mendoza. The platform serves three user roles: Tourist, Local (service providers and municipalities), and Admin. The project runs from February 12, 2026 to May 15, 2026, across five WBS phases: Initiation (1.1), Planning (1.2), Execution (1.3), Control (1.4, concurrent), and Closeout (1.5), producing 18 formal deliverables. The system is built on a confirmed tech stack of Laravel (backend), React (web frontend), Flutter (mobile), PostgreSQL (database), and Figma (UI/UX design).
+                              Business Objectives
+                              Business Objective
+                                  Description
+Specific
+Design, develop, and deploy the Doon AI-powered tourism platform for CALABARZON, delivering all 18 formal project deliverables across five WBS phases.
+Measurable
+100% of deliverables submitted on or before their due dates; Customer Acceptance Form signed by Asst. Prof. Arlene M. Mendoza by May 15, 2026.
+Achievable
+All tasks have defined WBS codes, predecessor relationships, and are assigned to a five-member team with confirmed roles from the Kick Off Meeting (February 26, 2026).
+Relevant
+Directly addresses the lack of a centralized regional tourism platform connecting Tourists, Local service providers, and LGUs across the five CALABARZON provinces.
+Time-specific
+Project starts February 12, 2026 and closes May 15, 2026 (charter timeline: February 27, 2026  -  April 30, 2026), across five WBS phases with fixed milestone dates per the Gantt Chart.
+
+                                Needs Statement
+Tourism data across the five provinces of CALABARZON (Batangas, Laguna, Cavite, Rizal, and Quezon) is fragmented across social media, travel blogs, and informal channels with no unified source for Tourists, Local service providers, or LGUs. Trip planning is inefficient and regional tourism potential is underutilized.
+
+The Doon project resolves this by building a single AI-powered web and mobile platform with a multi-criteria recommendation engine, an AI chatbot, an interactive regional map, smart travel features (weather integration, itinerary planning, packing suggestions), a local business directory, and an LGU analytics dashboard  --  giving all three user roles a shared, reliable system that promotes sustainable regional tourism development aligned with SDG 8, 9, 11, and 12.
+                                       
+                                 Project Scope
+
+                                    WBS ID
+                                  Deliverable
+                                   Deadline
+                                     Owner
+1.1.1
+Letter to Sponsor
+February 13, 2026
+Adona, Linux Mandrake S.
+1.1.2
+Project Staffing Profile
+February 17, 2026
+Eleponga, Felman I.
+1.1.3
+Business Case
+February 20, 2026
+Villaflor, Djanisse N., Adona, Linux Mandrake S., Pagcaliwagan, Zeth Ramzy A., Bebita, Jessa Marie E.
+1.1.4
+Preliminary Investigation Report
+March 3, 2026
+Eleponga, Felman I.
+1.1.5
+Kick Off Meeting
+February 26, 2026
+All Team Members
+1.1.6
+Project Charter
+March 5, 2026
+Eleponga, Felman I.
+1.2.1
+Gantt Chart
+March 5, 2026
+Eleponga, Felman I.
+1.2.2
+Work Breakdown Structure (WBS)
+March 5, 2026
+Villaflor, Djanisse N., Adona, Linux Mandrake S., Pagcaliwagan, Zeth Ramzy A., Bebita, Jessa Marie E.
+1.2.3
+Project Scope Document
+March 12, 2026
+Eleponga, Felman I.
+1.2.4
+Project Requirements Document
+March 12, 2026
+Eleponga, Felman I.
+1.2.5
+Project Management Plan
+March 12, 2026
+Villaflor, Djanisse N., Adona, Linux Mandrake S., Pagcaliwagan, Zeth Ramzy A., Bebita, Jessa Marie E.
+1.3.1
+Prototypes and Wireframes
+March 19, 2026
+Pagcaliwagan, Zeth Ramzy A.
+1.3.2
+Test Plan
+March 19, 2026
+Adona, Linux Mandrake S.
+1.3.3
+Test Cases
+March 19, 2026
+Adona, Linux Mandrake S.
+1.3.4
+Test Report
+May 7, 2026
+Adona, Linux Mandrake S.
+1.4.1
+Milestone Report
+May 7, 2026
+Bebita, Jessa Marie E.
+1.5.1
+Lessons Learned Report
+May 14, 2026
+Bebita, Jessa Marie E.
+1.5.2
+Customer Acceptance Form
+May 15, 2026
+Adona, Linux Mandrake S.
+
+Team & Budget:
+                                  Team Member
+                                     Role
+                               Responsibilities
+                                     Cost
+Eleponga, Felman I.
+Software Engineer
+Backend development, system architecture, and technical implementation using Laravel.
+₱0
+Adona, Linux Mandrake S.
+System Tester / QA
+Tests all system components; supports development during build phases.
+₱0
+Villaflor, Djanisse N.
+System Analyst
+Requirements gathering, DFDs, system architecture diagrams, and technical documentation.
+₱0
+Pagcaliwagan, Zeth Ramzy A.
+UI/UX Designer
+Interface design using Figma; prototypes and wireframes for all three user roles.
+₱0
+Bebita, Jessa Marie E.
+Team Librarian
+Documentation, research references, and project records.
+₱0
+Google Maps / Geolocation API (~3 months)
+Infrastructure
+Estimated usage cost for development and testing period.
+₱1,500
+Cloud Hosting  -  DigitalOcean (~3 months)
+Infrastructure
+Estimated for a basic droplet supporting the platform during development and testing.
+₱3,500
+Domain Name Registration (1 year)
+Infrastructure
+Standard .com or .ph domain registration.
+₱800
+Printing & Documentation
+Operational
+Reports, sign-off forms, and printed deliverables.
+₱500
+Miscellaneous & Contingency (10%)
+Buffer
+Buffer for unforeseen minor expenses.
+₱630
+Total Project Cost
+
+
+₱6,930
+
+                                 Requirements
+                                    WBS ID
+                                  Deliverable
+                            Requirement Description
+
+Phase 1.1  --  INITIATION
+Must complete before Planning.
+1.1.1
+Letter to Sponsor
+Formally request sponsor approval and institutional support for the Doon project.
+1.1.2
+Project Staffing Profile
+Document and confirm team roles, responsibilities, and competencies for all five members.
+1.1.3
+Business Case
+Justify the project investment through a structured problem analysis, cost-benefit assessment, and strategic alignment.
+1.1.4
+Preliminary Investigation Report
+Validate technical and organizational feasibility before committing to full planning.
+1.1.5
+Kick Off Meeting
+Formally launch the project; confirm scope, roles, and schedule with the sponsor and full team.
+1.1.6
+Project Charter
+Authorize the project with a signed document from Asst. Prof. Arlene M. Mendoza before Planning begins.
+
+Phase 1.2  --  PLANNING
+Must complete before Execution.
+1.2.1
+Gantt Chart
+Establish the complete project schedule with all 18 deliverables, durations, and predecessor relationships.
+1.2.2
+WBS
+Decompose all project work into five phases and 18 Level 3 work packages.
+1.2.3
+Project Scope Document
+Define project boundaries, in-scope and out-of-scope features, deliverables, constraints, and cost estimates.
+1.2.4
+Project Requirements Document
+Document all functional and non-functional requirements for the Doon platform covering all three user roles.
+1.2.5
+Project Management Plan
+Consolidate schedule baseline, risk register, communication plan, and resource allocation into one integrated plan.
+
+Phase 1.3  --  EXECUTION
+
+1.3.1
+Prototypes and Wireframes
+Validate UI/UX design for Tourist, Local, and Admin roles using Figma prototypes reviewed by stakeholders.
+1.3.2
+Test Plan
+Define the testing strategy, scope, schedule, environment, tools, and responsibilities for the Doon system.
+1.3.3
+Test Cases
+Specify test scenarios, inputs, and expected outcomes for all functional and non-functional requirements.
+1.3.4
+Test Report
+Document test execution results, defects discovered, resolution status, and overall system quality assessment.
+
+Phase 1.4  --  CONTROL
+Ongoing throughout all phases.
+1.4.1
+Milestone Report
+Track and report project progress, schedule adherence, current risks, and next steps at key control points.
+
+Phase 1.5  --  CLOSEOUT
+
+1.5.1
+Lessons Learned Report
+Capture project successes, challenges, process deviations, and improvement recommendations.
+1.5.2
+Customer Acceptance Form
+Obtain formal sign-off from the Project Sponsor confirming all deliverables and system functionality are accepted.
+
+                             Project Stakeholders
+                                     Name
+                                     Role
+                               Responsibilities
+Asst. Prof. Benjie R. Samonte
+Project Manager
+Oversees all WBS phases, manages schedule and risks, communicates with the Project Sponsor.
+Asst. Prof. Arlene M. Mendoza
+Project Sponsor
+Approves the Project Charter, reviews deliverables, and signs the Customer Acceptance Form.
+Eleponga, Felman I.
+Software Engineer
+Backend development, system architecture, and technical implementation using Laravel.
+Adona, Linux Mandrake S.
+System Tester / QA
+Tests all system components; supports development during build phases.
+Villaflor, Djanisse N.
+System Analyst
+Requirements gathering, DFDs, system architecture diagrams, and technical documentation.
+Pagcaliwagan, Zeth Ramzy A.
+UI/UX Designer
+Interface design using Figma; prototypes and wireframes for all three user roles.
+Bebita, Jessa Marie E.
+Team Librarian
+Documentation, research references, and project records.
+LGU Partners  -  5 CALABARZON Provinces
+Primary Data Provider
+Primary data providers for tourism destination listings and activity information.
+Local Service Providers
+Stakeholder
+Activity directory contributors and system stakeholders.
+End Users / Tourists
+Primary End User
+Primary target users of the Doon platform.
+
+                               Project Schedule
+                                       #
+                                  Deliverable
+                                  Finish Date
+                                     Owner
+                                    Status
+1
+Letter to Sponsor
+Feb 13, 2026
+Adona, Linux M.
+Completed
+2
+Project Staffing Profile
+Feb 17, 2026
+Eleponga, Felman I.
+Completed
+3
+Business Case
+Feb 20, 2026
+Villaflor, Djanisse N., Adona, Linux Mandrake S., Pagcaliwagan, Zeth Ramzy A., Bebita, Jessa Marie E.
+Completed
+4
+Preliminary Investigation Report
+Mar 3, 2026
+Villaflor, Djanisse N.
+Completed
+5
+Kick Off Meeting
+Feb 26, 2026
+All Team
+Completed
+6
+Project Charter
+Mar 5, 2026
+Eleponga, Felman I.
+Completed
+7
+Gantt Chart
+Mar 5, 2026
+Eleponga, Felman I.
+Completed
+8
+WBS
+Mar 5, 2026
+Villaflor, Djanisse N., Adona, Linux Mandrake S., Pagcaliwagan, Zeth Ramzy A., Bebita, Jessa Marie E.
+Completed
+9
+Project Scope Document
+Mar 12, 2026
+Eleponga, Felman I.
+Completed
+10
+Project Requirements Document
+Mar 12, 2026
+Eleponga, Felman I.
+Completed
+11
+Project Management Plan
+Mar 12, 2026
+Villaflor, Djanisse N., Adona, Linux Mandrake S., Pagcaliwagan, Zeth Ramzy A., Bebita, Jessa Marie E.
+Completed
+12
+Prototypes and Wireframes
+Mar 19, 2026
+Pagcaliwagan, Zeth R.
+In Progress
+13
+Test Plan
+Mar 19, 2026
+Adona, Linux M.
+In Progress
+14
+Test Cases
+Mar 19, 2026
+Adona, Linux M.
+Upcoming
+15
+Test Report
+May 7, 2026
+Adona, Linux M.
+Upcoming
+16
+Milestone Report
+May 7, 2026
+Bebita, Jessa M.
+Upcoming
+17
+Lessons Learned Report
+May 14, 2026
+Bebita, Jessa M.
+Upcoming
+18
+Customer Acceptance Form
+May 15, 2026
+Adona, Linux M.
+Upcoming
+
+                             Cost-Benefit Analysis
+Estimated Development Costs:
+                                   Cost Item
+                                     Type
+                                  Description
+                                   Est. Cost
+                                    Remarks
+Personnel (5 members, ~13 weeks)
+One-time
+Academic capstone project; labor contributed by team members as part of coursework.
+₱0
+Academic
+Software Licenses (Laravel, React, Flutter, PostgreSQL, GitHub)
+One-time
+All open-source tools, freely available.
+₱0
+Open-source
+Figma (Free Tier)
+One-time
+Free tier sufficient for prototype and wireframe development.
+₱0
+Free tier
+OpenWeatherMap API (Free Tier)
+One-time
+Free tier covers project-scale usage.
+₱0
+Free tier
+SSL Certificate (Let's Encrypt)
+One-time
+Free certificate authority.
+₱0
+Free
+Google Maps / Geolocation API (~3 months)
+One-time
+Estimated usage cost for development and testing period.
+₱1,500
+Paid API
+Cloud Hosting  -  DigitalOcean (~3 months)
+One-time
+Estimated for a basic droplet supporting the platform during development and testing.
+₱3,500
+Paid hosting
+Domain Name Registration (1 year)
+One-time
+Standard .com or .ph domain registration.
+₱800
+Annual
+Printing & Documentation
+One-time
+Reports, sign-off forms, and printed deliverables.
+₱500
+Materials
+Miscellaneous & Contingency (10%)
+Buffer
+Buffer for unforeseen minor expenses.
+₱630
+10% buffer
+Total Estimated Development Cost
+
+
+₱6,930
+
+
+Expected Benefits:
+                                    Benefit
+                                   Category
+                                  Description
+Unified regional tourism hub
+Operational
+Eliminates information fragmentation across all five CALABARZON provinces for Tourists, LSPs, and LGUs.
+AI-driven personalized recommendations
+Service
+Increases tourist engagement and trip planning efficiency through multi-criteria recommendations and AI chatbot guidance.
+Interactive map & business directory
+Community
+Increases digital visibility and income potential for small and community-based enterprises across CALABARZON.
+LGU Analytics Dashboard
+Governance
+Provides data-driven insights for government tourism planning, destination performance tracking, and policy decision-making.
+SDG Alignment (SDG 8, 9, 11, 12)
+Institutional
+Demonstrates institutional contribution to sustainable regional development and responsible tourism at Batangas State University ARASOF-Nasugbu.
+Reusable AI framework
+Technical
+AI recommendation engine applicable to future Philippine regional tourism platforms; reusable architecture reduces future development cost.
+
+                              Project Constraints
+                                Constraint Type
+                                  Description
+                             Mitigation / Response
+Time
+Project must close by May 15, 2026 (Gantt closeout)  --  all 18 deliverables have fixed Gantt Chart due dates; delays cascade through predecessor-linked tasks.
+Strict milestone-based schedule with deliverables tied to predecessor tasks; no scope changes permitted after Kick Off.
+Team Availability
+Fixed five-member team  --  absence of any member delays dependent deliverables; no backup personnel identified.
+Tasks distributed by confirmed roles; weekly check-ins and Gantt Chart adherence maintained throughout all phases.
+Data Quality
+LGU tourism data accuracy not guaranteed  --  incomplete or inaccurate records may impact destination listing quality and recommendation accuracy.
+Data validation rules built into the platform; LGU partners engaged early in Phase 1.1 to confirm data availability.
+Technology
+Third-party API availability and pricing  --  geolocation and weather API rate limits and licensing costs may constrain real-time features.
+Fallback plans required; free-tier APIs prioritized (OpenWeatherMap); Google Maps usage capped to stay within ₱1,500 budget.
+Scope
+No changes after Kick Off (Feb 26, 2026)  --  any scope change requires formal review and written approval from Asst. Prof. Arlene M. Mendoza.
+All out-of-scope requests formally documented and deferred; change requests escalated to Project Manager immediately.
+Budget
+Institutional academic budget only  --  cost overruns must be escalated immediately; no discretionary budget available.
+Open-source stack (Laravel, React, Flutter, PostgreSQL) eliminates licensing costs; only API and hosting fees are paid.
+Data Privacy
+Data Privacy Act of 2012 compliance required  --  user location and behavioral data collection requires explicit consent; role-based access and secure authentication must be implemented.
+Role-based access control, data encryption, explicit consent prompts, and audit logging implemented as core system features.
+
+

@@ -141,3 +141,30 @@ function jsonResponse($success, $data = null, $error = '') {
         'error'   => $error
     ]);
 }
+
+/**
+ * Upload images from a multi-file input named "images[]".
+ * Stores files under /uploads/$subfolder/, returns web-accessible paths.
+ * @param string $subfolder  e.g. 'listings' or 'destinations'
+ * @param int    $maxFiles   Maximum number of files to accept
+ * @return string[]          Array of web-accessible paths
+ */
+function uploadImages(string $subfolder, int $maxFiles = 10): array {
+    $paths = [];
+    if (empty($_FILES['images']['name'][0])) return $paths;
+    $uploadDir = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . '/doon-app/uploads/' . $subfolder . '/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    foreach ($_FILES['images']['tmp_name'] as $i => $tmp) {
+        if (count($paths) >= $maxFiles) break;
+        if ($_FILES['images']['error'][$i] !== UPLOAD_ERR_OK) continue;
+        if ($_FILES['images']['size'][$i] > 5 * 1024 * 1024) continue;
+        $mime = mime_content_type($tmp);
+        if (!isset($allowed[$mime])) continue;
+        $filename = "{$subfolder}_" . bin2hex(random_bytes(8)) . ".{$allowed[$mime]}";
+        if (move_uploaded_file($tmp, "{$uploadDir}{$filename}")) {
+            $paths[] = "/doon-app/uploads/{$subfolder}/{$filename}";
+        }
+    }
+    return $paths;
+}

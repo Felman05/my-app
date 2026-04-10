@@ -18,5 +18,3 @@
     <?php endif; ?>
 </head>
 <body>
-    <div id="cur"></div>
-    <div id="curo"></div>

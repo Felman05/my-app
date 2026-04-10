@@ -138,11 +138,24 @@ try {
 
       <section class="dc col-stack">
         <div>
-          <div class="dc-title mb16">Map Preview</div>
+          <div class="dc-title mb16">Map Preview <a href="/doon-app/tourist/map.php" class="s-btn" style="float:right;font-size:.75rem;">Explore Map</a></div>
+          <?php
+            require_once '../includes/env.php';
+            $gmKey = env('GOOGLE_MAPS_API_KEY', '');
+          ?>
+          <?php if ($gmKey): ?>
+          <iframe
+            width="100%" height="160"
+            style="border:1px solid var(--bd);border-radius:var(--r2);display:block;"
+            loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps/embed/v1/view?key=<?php echo urlencode($gmKey); ?>&center=14.10,121.25&zoom=8">
+          </iframe>
+          <?php else: ?>
           <div class="map-box">
             <div class="map-pins"><span class="m-pin"></span><span class="m-pin"></span><span class="m-pin"></span></div>
-            <div>Interactive map preview</div>
+            <div>Map unavailable — API key not configured.</div>
           </div>
+          <?php endif; ?>
         </div>
         <div>
           <div class="sub-lbl">Packing Essentials</div>

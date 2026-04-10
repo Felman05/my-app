@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $genSelect = '';
     $validGen  = ['gen_z', 'millennial', 'gen_x', 'boomer'];
     if ($genProfile && in_array($genProfile, $validGen)) {
-        $genSelect = ", CAST(JSON_UNQUOTE(JSON_EXTRACT(d.generational_appeal, '$." . $genProfile . "')) AS DECIMAL(5,2)) AS gen_score";
+        $genSelect = ", CAST(JSON_UNQUOTE(JSON_EXTRACT(d.generational_appeal, '$.{$genProfile}')) AS DECIMAL(5,2)) AS gen_score";
         $orderBy   = 'gen_score DESC, d.avg_rating DESC';
     }
 
@@ -221,7 +221,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="dest-list">
       <?php foreach ($recommendations as $rec): ?>
       <a href="/doon-app/tourist/destination.php?id=<?php echo $rec['id']; ?>" class="dest-row">
-        <div class="dest-ico">R</div>
+        <?php if ($rec['cover_image']): ?>
+        <img src="<?php echo escape($rec['cover_image']); ?>" alt="<?php echo escape($rec['name']); ?>"
+             style="width:52px;height:44px;object-fit:cover;border-radius:var(--r);flex-shrink:0;border:1px solid var(--bd);">
+        <?php else: ?>
+        <div class="dest-ico">D</div>
+        <?php endif; ?>
         <div>
           <div class="dest-name"><?php echo escape($rec['name']); ?></div>
           <div class="dest-meta"><?php echo escape($rec['province_name']); ?> &mdash; <?php echo escape($rec['price_label'] ?? 'Price on request'); ?></div>

@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     } catch (PDOException $e) {}
     // PRG: redirect to prevent double-submit on refresh
-    header('Location: /doon-app/tourist/destination.php?id=' . $destId);
+    header("Location: /doon-app/tourist/destination.php?id={$destId}");
     exit;
 }
 ?>
@@ -175,7 +175,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
   <div class="g31">
     <section class="dc">
-      <div class="map-box" style="height:220px;margin-bottom:14px;"><div class="map-pins"><span class="m-pin"></span><span class="m-pin"></span><span class="m-pin"></span></div><div>Destination preview</div></div>
+      <?php
+        require_once '../includes/env.php';
+        $gmKey = env('GOOGLE_MAPS_API_KEY', '');
+        $hasCoords = !empty($destination['latitude']) && !empty($destination['longitude']);
+        $destImages = ($destination['images'] ?? null) ? json_decode($destination['images'], true) : [];
+        $coverImage = $destination['cover_image'] ?? ($destImages[0] ?? null);
+      ?>
+      <?php if ($coverImage): ?>
+      <img src="<?php echo escape($coverImage); ?>" alt="<?php echo escape($destination['name']); ?>"
+           style="width:100%;height:220px;object-fit:cover;border-radius:var(--r2);display:block;margin-bottom:10px;">
+      <?php if (count($destImages) > 1): ?>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <?php foreach (array_slice($destImages, 1) as $img): ?>
+        <img src="<?php echo escape($img); ?>" alt="<?php echo escape($destination['name']); ?>"
+             style="width:72px;height:54px;object-fit:cover;border-radius:var(--r);border:1px solid var(--bd);cursor:pointer;"
+             onclick="this.closest('section').querySelector('img').src=this.src">
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
+      <?php endif; ?>
+      <?php if ($gmKey && $hasCoords): ?>
+      <iframe
+        width="100%" height="220"
+        style="border:1px solid var(--bd);border-radius:var(--r2);display:block;margin-bottom:14px;"
+        loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps/embed/v1/view?key=<?php echo urlencode($gmKey); ?>&center=<?php echo (float) $destination['latitude']; ?>,<?php echo (float) $destination['longitude']; ?>&zoom=15">
+      </iframe>
+      <?php elseif ($gmKey): ?>
+      <iframe
+        width="100%" height="220"
+        style="border:1px solid var(--bd);border-radius:var(--r2);display:block;margin-bottom:14px;"
+        loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+        src="https://www.google.com/maps/embed/v1/place?key=<?php echo urlencode($gmKey); ?>&q=<?php echo urlencode($destination['name'] . ', CALABARZON, Philippines'); ?>">
+      </iframe>
+      <?php else: ?>
+      <div class="map-box" style="height:220px;margin-bottom:14px;"><div class="map-pins"><span class="m-pin"></span><span class="m-pin"></span><span class="m-pin"></span></div><div>Map unavailable.</div></div>
+      <?php endif; ?>
       <p><?php echo nl2br(escape($destination['long_description'] ?? $destination['short_description'])); ?></p>
       <div class="divider"></div>
 

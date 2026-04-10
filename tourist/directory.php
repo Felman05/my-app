@@ -30,7 +30,7 @@ if ($provinceFilter) {
 }
 if ($search !== '') {
     $where[]  = '(pl.listing_title LIKE ? OR pl.description LIKE ? OR lpp.business_name LIKE ?)';
-    $s = '%' . $search . '%';
+    $s = "%{$search}%";
     $params[] = $s; $params[] = $s; $params[] = $s;
 }
 
@@ -126,9 +126,17 @@ $priceLabels = ['free' => 'Free', 'budget' => 'Budget', 'mid_range' => 'Mid Rang
         $avail = $l['availability'] ? json_decode($l['availability'], true) : null;
         $openTime  = $avail['open_time']  ?? null;
         $closeTime = $avail['close_time'] ?? null;
-        $hours = ($openTime && $closeTime) ? $openTime . ' – ' . $closeTime : null;
+        $hours = ($openTime && $closeTime) ? "{$openTime} – {$closeTime}" : null;
+        $imgs  = !empty($l['images']) ? json_decode($l['images'], true) : [];
+        $thumb = $imgs[0] ?? null;
     ?>
     <div class="dest-card">
+      <?php if ($thumb): ?>
+      <div style="height:160px;overflow:hidden;border-radius:var(--r2) var(--r2) 0 0;background:var(--bg2);">
+        <img src="<?php echo escape($thumb); ?>" alt="<?php echo escape($l['listing_title']); ?>"
+             style="width:100%;height:100%;object-fit:cover;display:block;">
+      </div>
+      <?php endif; ?>
       <div class="dest-card-body">
         <div class="dest-card-type"><?php echo $typeLabels[$l['listing_type']] ?? $l['listing_type']; ?></div>
         <div class="dest-card-name"><?php echo escape($l['listing_title']); ?></div>

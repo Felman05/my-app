@@ -1,12 +1,12 @@
 <?php
 require_once '../includes/db.php';
 require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 requireRole('local');
 $currentUser = getCurrentUser();
 $pageTitle = 'Create Listing';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
 
-// Get this provider's profile id
 try {
     $stmt = $pdo->prepare('SELECT id FROM local_provider_profiles WHERE user_id = ? LIMIT 1');
     $stmt->execute([$currentUser['id']]);
@@ -45,12 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid listing type.';
     } else {
         try {
-            $stmt = $pdo->prepare(
+            $newImages  = uploadImages('listings', 5);
+            $imagesJson = !empty($newImages) ? json_encode($newImages) : null;
+            $pdo->prepare(
                 'INSERT INTO provider_listings
-                    (provider_id, listing_title, listing_type, description, price, price_label, contact_number, capacity, availability, status, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", NOW())'
-            );
-            $stmt->execute([$providerId, $title, $listingType, $description, $price, $priceLabel ?: null, $contact, $capacity, $availability]);
+                    (provider_id, listing_title, listing_type, description, images, price, price_label,
+                     contact_number, capacity, availability, status, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "pending", NOW())'
+            )->execute([$providerId, $title, $listingType, $description, $imagesJson, $price, $priceLabel ?: null, $contact, $capacity, $availability]);
             header('Location: /doon-app/local/listings.php');
             exit;
         } catch (Exception $e) {
@@ -72,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <section class="dc" style="max-width:640px;">
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <div class="rf-g mb16">
         <label class="rf-lbl">Listing Title</label>
         <input class="rf-ctrl" type="text" name="listing_title" required placeholder="e.g., Tagaytay Nature Tour">
@@ -130,6 +132,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </label>
           <?php endforeach; ?>
         </div>
+      </div>
+      <div class="rf-g mb16">
+        <label class="rf-lbl">Photos (up to 5, JPG/PNG/WebP, max 5 MB each)</label>
+        <input class="rf-ctrl" type="file" name="images[]" accept="image/jpeg,image/png,image/webp" multiple style="padding:6px;">
+        <span style="font-size:.75rem;color:var(--i4);margin-top:4px;display:block;">First photo will be shown as the main image in the directory.</span>
       </div>
       <button class="rf-go" type="submit">Submit for Review</button>
     </form>
