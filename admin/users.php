@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                 if ($role === 'tourist') {
                     $pdo->prepare(
                         'INSERT INTO tourist_profiles (user_id, generational_profile, preferred_budget, travel_style, location_tracking_consent, created_at)
-                         VALUES (?, "millennial", "mid_range", "adventure", 0, NOW())'
+                         VALUES (?, "millennial", "mid_range", "solo", 0, NOW())'
                     )->execute([$userId]);
                 }
 

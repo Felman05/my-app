@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'INSERT INTO tourist_profiles (user_id, generational_profile, preferred_budget, travel_style, location_tracking_consent, created_at)
                      VALUES (?, ?, ?, ?, 0, NOW())'
                 );
-                $stmt->execute([$userId, 'millennial', 'mid_range', 'adventure']);
+                $stmt->execute([$userId, 'millennial', 'mid_range', 'solo']);
             }
 
             $pdo->commit();
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
             setUserSession($user);
 
-            header('Location: /doon-app/' . $role . '/dashboard.php');
+            header("Location: /doon-app/{$role}/dashboard.php");
             exit;
 
         } catch (PDOException $e) {
