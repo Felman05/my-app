@@ -45,6 +45,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $lng        = ($_POST['longitude'] ?? '') !== '' ? (float) $_POST['longitude'] : null;
     $priceLabel = $_POST['price_label'] ?: null;
     $contact    = trim($_POST['contact_number'] ?? '');
+    $email      = trim($_POST['email'] ?? '');
+    $website    = trim($_POST['website_url'] ?? '');
+    $facebook   = trim($_POST['facebook_url'] ?? '');
+    $openTime   = trim($_POST['opening_time'] ?? '') ?: null;
+    $closeTime  = trim($_POST['closing_time'] ?? '') ?: null;
+    $openDays   = $_POST['open_days'] ?? [];
+    $openDaysJson = !empty($openDays) ? json_encode([...$openDays]) : null;
     $isActive   = isset($_POST['is_active']) ? 1 : 0;
     $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
 
@@ -71,11 +78,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'UPDATE destinations
                  SET name=?, province_id=?, category_id=?, short_description=?, description=?,
                      address=?, latitude=?, longitude=?, price_label=?, contact_number=?,
+                     email=?, website_url=?, facebook_url=?, opening_time=?, closing_time=?, open_days=?,
                      cover_image=?, images=?, is_active=?, is_featured=?, updated_at=NOW()
                  WHERE id=?'
             )->execute([
                 $name, $provinceId, $categoryId, $shortDesc, $desc,
                 $address, $lat, $lng, $priceLabel, $contact,
+                $email ?: null, $website ?: null, $facebook ?: null, $openTime, $closeTime, $openDaysJson,
                 $coverImage, $imagesJson, $isActive, $isFeatured, $id
             ]);
 
@@ -138,7 +147,21 @@ $existingImages = ($dest['images'] ?? null) ? json_decode($dest['images'], true)
         <div class="rf-g"><label class="rf-lbl">Latitude</label><input class="rf-ctrl" type="number" name="latitude" step="any" value="<?php echo $dest['latitude'] ?? ''; ?>"></div>
         <div class="rf-g"><label class="rf-lbl">Longitude</label><input class="rf-ctrl" type="number" name="longitude" step="any" value="<?php echo $dest['longitude'] ?? ''; ?>"></div>
         <div class="rf-g"><label class="rf-lbl">Contact Number</label><input class="rf-ctrl" name="contact_number" value="<?php echo escape($dest['contact_number'] ?? ''); ?>"></div>
-        <div class="rf-g" style="display:flex;align-items:center;gap:16px;margin-top:20px;">
+        <div class="rf-g"><label class="rf-lbl">Email</label><input class="rf-ctrl" type="email" name="email" value="<?php echo escape($dest['email'] ?? ''); ?>" placeholder="info@example.com"></div>
+        <div class="rf-g"><label class="rf-lbl">Website URL</label><input class="rf-ctrl" type="url" name="website_url" value="<?php echo escape($dest['website_url'] ?? ''); ?>" placeholder="https://"></div>
+        <div class="rf-g"><label class="rf-lbl">Facebook URL</label><input class="rf-ctrl" type="url" name="facebook_url" value="<?php echo escape($dest['facebook_url'] ?? ''); ?>" placeholder="https://facebook.com/..."></div>
+        <div class="rf-g"><label class="rf-lbl">Opening Time</label><input class="rf-ctrl" type="time" name="opening_time" value="<?php echo escape($dest['opening_time'] ?? ''); ?>"></div>
+        <div class="rf-g"><label class="rf-lbl">Closing Time</label><input class="rf-ctrl" type="time" name="closing_time" value="<?php echo escape($dest['closing_time'] ?? ''); ?>"></div>
+        <?php $existingOpenDays = ($dest['open_days'] ?? null) ? json_decode($dest['open_days'], true) : []; ?>
+        <div class="rf-g" style="grid-column:1/-1;">
+          <label class="rf-lbl">Open Days</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+            <?php foreach (['mon'=>'Mon','tue'=>'Tue','wed'=>'Wed','thu'=>'Thu','fri'=>'Fri','sat'=>'Sat','sun'=>'Sun'] as $val => $lbl): ?>
+            <label style="display:flex;align-items:center;gap:4px;font-size:.85rem;"><input type="checkbox" name="open_days[]" value="<?php echo $val; ?>" <?php echo in_array($val, $existingOpenDays) ? 'checked' : ''; ?>> <?php echo $lbl; ?></label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div class="rf-g" style="display:flex;align-items:center;gap:16px;margin-top:4px;">
           <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="is_active" <?php echo $dest['is_active'] ? 'checked' : ''; ?>> Active</label>
           <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="is_featured" <?php echo $dest['is_featured'] ? 'checked' : ''; ?>> Featured</label>
         </div>

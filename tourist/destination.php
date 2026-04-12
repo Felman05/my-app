@@ -127,6 +127,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                      VALUES (?, ?, ?, ?, ?, 1, NOW())'
                 );
                 $stmt->execute([$currentUser['id'], $destId, $rating, $title, $body]);
+
+                // Recalculate destination avg_rating and total_reviews
+                $pdo->prepare(
+                    'UPDATE destinations SET
+                         avg_rating = (SELECT ROUND(AVG(r.rating),2) FROM reviews r WHERE r.destination_id = ? AND r.is_published = 1),
+                         total_reviews = (SELECT COUNT(*) FROM reviews r WHERE r.destination_id = ? AND r.is_published = 1),
+                         updated_at = NOW()
+                     WHERE id = ?'
+                )->execute([$destId, $destId, $destId]);
+
                 $reviewSuccess = true;
                 $hasReviewed = true;
 
@@ -212,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       <?php else: ?>
       <div class="map-box" style="height:220px;margin-bottom:14px;"><div class="map-pins"><span class="m-pin"></span><span class="m-pin"></span><span class="m-pin"></span></div><div>Map unavailable.</div></div>
       <?php endif; ?>
-      <p><?php echo nl2br(escape($destination['long_description'] ?? $destination['short_description'])); ?></p>
+      <p><?php echo nl2br(escape($destination['description'] ?? $destination['short_description'])); ?></p>
       <div class="divider"></div>
 
       <?php if ($reviewSuccess): ?><div class="alert ok">Your review has been posted.</div><?php endif; ?>
@@ -249,6 +259,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <div class="bar-row"><div class="bar-lbl">Rating</div><div class="bar-bg"><div class="bar-f ac" style="width:<?php echo min(100, ((float) ($destination['avg_rating'] ?? 0) / 5) * 100); ?>%"></div></div><div class="bar-val"><?php echo number_format((float) ($destination['avg_rating'] ?? 0), 1); ?></div></div>
         <div class="bar-row"><div class="bar-lbl">Views</div><div class="bar-bg"><div class="bar-f" style="width:70%"></div></div><div class="bar-val"><?php echo number_format((int) ($destination['view_count'] ?? 0)); ?></div></div>
       </div>
+
+      <?php
+        $openDays  = ($destination['open_days'] ?? null) ? json_decode($destination['open_days'], true) : [];
+        $openTime  = $destination['opening_time'] ?? null;
+        $closeTime = $destination['closing_time'] ?? null;
+        $dayLabels = ['mon'=>'Mon','tue'=>'Tue','wed'=>'Wed','thu'=>'Thu','fri'=>'Fri','sat'=>'Sat','sun'=>'Sun'];
+      ?>
+
+      <?php if ($destination['contact_number'] || $destination['email'] || $destination['website_url'] || $destination['facebook_url'] || $openTime || !empty($openDays)): ?>
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:.82rem;">
+        <?php if ($openTime && $closeTime): ?>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <span style="min-width:70px;font-weight:600;color:var(--i3);">Hours</span>
+          <span><?php echo escape(date('g:i A', strtotime($openTime))); ?> – <?php echo escape(date('g:i A', strtotime($closeTime))); ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if (!empty($openDays)): ?>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <span style="min-width:70px;font-weight:600;color:var(--i3);">Open</span>
+          <span><?php echo implode(', ', array_map(fn($d) => $dayLabels[$d] ?? $d, $openDays)); ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if ($destination['contact_number']): ?>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <span style="min-width:70px;font-weight:600;color:var(--i3);">Phone</span>
+          <span><?php echo escape($destination['contact_number']); ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if ($destination['email']): ?>
+        <div style="display:flex;gap:8px;align-items:flex-start;">
+          <span style="min-width:70px;font-weight:600;color:var(--i3);">Email</span>
+          <a href="mailto:<?php echo escape($destination['email']); ?>"><?php echo escape($destination['email']); ?></a>
+        </div>
+        <?php endif; ?>
+        <?php if ($destination['website_url'] || $destination['facebook_url']): ?>
+        <div style="display:flex;gap:6px;margin-top:2px;">
+          <?php if ($destination['website_url']): ?><a class="s-btn" href="<?php echo escape($destination['website_url']); ?>" target="_blank" rel="noopener">Website</a><?php endif; ?>
+          <?php if ($destination['facebook_url']): ?><a class="s-btn" href="<?php echo escape($destination['facebook_url']); ?>" target="_blank" rel="noopener">Facebook</a><?php endif; ?>
+        </div>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
+
       <div class="divider"></div>
 
       <?php if ($itinerarySuccess): ?>
