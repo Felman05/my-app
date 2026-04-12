@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/db.php';
 require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 requireRole('admin');
 $pageTitle = 'Manage Providers';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
@@ -20,6 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                  WHERE id = ?'
             );
             $stmt->execute([$newStatus, $reason, $_SESSION['user_id'], $listingId]);
+            $desc = $action === 'approve' ? "Approved listing #{$listingId}" : "Rejected listing #{$listingId}: {$reason}";
+            logAdminActivity($pdo, (int) $_SESSION['user_id'], "{$action}_listing", 'provider_listing', $listingId, $desc);
         } catch (Exception $e) {}
     }
     header('Location: /doon-app/admin/providers.php');

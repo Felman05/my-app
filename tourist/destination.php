@@ -60,8 +60,35 @@ try {
     $stmt->execute([$currentUser['id']]);
     $userItineraries = $stmt->fetchAll();
 
+    // Load review IDs this user has already voted helpful
+    $stmt = $pdo->prepare(
+        'SELECT rhv.review_id FROM review_helpful_votes rhv
+         JOIN reviews r ON r.id = rhv.review_id
+         WHERE rhv.user_id = ? AND r.destination_id = ?'
+    );
+    $stmt->execute([$currentUser['id'], $destId]);
+    $myVotedReviewIds = array_column($stmt->fetchAll(), 'review_id');
+
 } catch (PDOException $e) {
     header('Location: /doon-app/tourist/discover.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mark_helpful') {
+    $reviewId = (int) ($_POST['review_id'] ?? 0);
+    if ($reviewId && !in_array($reviewId, $myVotedReviewIds)) {
+        try {
+            $stmt = $pdo->prepare('SELECT id FROM reviews WHERE id = ? AND destination_id = ? AND is_published = 1');
+            $stmt->execute([$reviewId, $destId]);
+            if ($stmt->fetch()) {
+                $pdo->prepare('INSERT INTO review_helpful_votes (review_id, user_id, created_at) VALUES (?, ?, NOW())')
+                    ->execute([$reviewId, $currentUser['id']]);
+                $pdo->prepare('UPDATE reviews SET helpful_count = helpful_count + 1 WHERE id = ?')
+                    ->execute([$reviewId]);
+            }
+        } catch (PDOException $e) {}
+    }
+    header("Location: /doon-app/tourist/destination.php?id={$destId}");
     exit;
 }
 
@@ -242,9 +269,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <?php foreach ($reviews as $review): ?>
         <div class="dest-row rev-item">
           <div class="dest-ico">U</div>
-          <div>
+          <div style="flex:1;">
             <div class="dest-name"><?php echo escape($review['name']); ?>  -  <?php echo escape($review['title']); ?></div>
             <div class="dest-meta"><?php echo escape($review['body']); ?></div>
+            <?php $alreadyVoted = in_array($review['id'], $myVotedReviewIds); ?>
+            <?php if (!$alreadyVoted): ?>
+            <form method="POST" style="display:inline;margin-top:4px;">
+              <input type="hidden" name="action" value="mark_helpful">
+              <input type="hidden" name="review_id" value="<?php echo (int) $review['id']; ?>">
+              <button class="s-btn" type="submit" style="font-size:.75rem;padding:2px 8px;">
+                Helpful (<?php echo (int) ($review['helpful_count'] ?? 0); ?>)
+              </button>
+            </form>
+            <?php else: ?>
+            <span style="font-size:.75rem;color:var(--i4);margin-top:4px;display:inline-block;">Helpful (<?php echo (int) ($review['helpful_count'] ?? 0); ?>) ✓</span>
+            <?php endif; ?>
           </div>
           <div class="dest-rating"><?php echo (int) $review['rating']; ?>/5</div>
         </div>

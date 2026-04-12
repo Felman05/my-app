@@ -56,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
                 }
 
                 $pdo->commit();
+                logAdminActivity($pdo, (int) $_SESSION['user_id'], 'create_user', 'user', (int) $userId, "Created {$role} account for \"{$name}\" ({$email})");
                 $message = 'User "' . htmlspecialchars($name) . '" created as ' . ucfirst($role) . '.';
             }
         } catch (Exception $e) {
@@ -70,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_user'])) {
     $uid = (int) $_POST['toggle_user'];
     try {
         $pdo->prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?')->execute([$uid]);
+        logAdminActivity($pdo, (int) $_SESSION['user_id'], 'toggle_user_active', 'user', $uid, "Toggled active status for user #{$uid}");
     } catch (Exception $e) {}
     header('Location: /doon-app/admin/users.php');
     exit;

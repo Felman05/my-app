@@ -143,6 +143,19 @@ function jsonResponse($success, $data = null, $error = '') {
 }
 
 /**
+ * Log an admin activity to admin_activity_logs.
+ * Silently fails so it never interrupts the main request.
+ */
+function logAdminActivity(PDO $pdo, int $adminId, string $action, ?string $modelType = null, ?int $modelId = null, ?string $description = null): void {
+    try {
+        $pdo->prepare(
+            'INSERT INTO admin_activity_logs (admin_id, action, model_type, model_id, description, ip_address, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, NOW())'
+        )->execute([$adminId, $action, $modelType, $modelId, $description, $_SERVER['REMOTE_ADDR'] ?? null]);
+    } catch (PDOException $e) {}
+}
+
+/**
  * Upload images from a multi-file input named "images[]".
  * Stores files under /uploads/$subfolder/, returns web-accessible paths.
  * @param string $subfolder  e.g. 'listings' or 'destinations'

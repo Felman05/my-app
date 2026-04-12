@@ -51,7 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $openTime   = trim($_POST['opening_time'] ?? '') ?: null;
     $closeTime  = trim($_POST['closing_time'] ?? '') ?: null;
     $openDays   = $_POST['open_days'] ?? [];
-    $openDaysJson = !empty($openDays) ? json_encode([...$openDays]) : null;
+    $openDaysJson   = !empty($openDays) ? json_encode([...$openDays]) : null;
+    $municipalityId = (int) ($_POST['municipality_id'] ?? 0) ?: null;
     $isActive   = isset($_POST['is_active']) ? 1 : 0;
     $isFeatured = isset($_POST['is_featured']) ? 1 : 0;
 
@@ -66,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $removeImages    = $_POST['remove_images'] ?? [];
             $keptImages      = array_values(array_diff($existingImages, $removeImages));
             $newImages       = uploadImages('destinations', 10);
-            $finalImages     = array_slice(array_merge($keptImages, $newImages), 0, 10);
+            $finalImages     = array_slice([...$keptImages, ...$newImages], 0, 10);
             $imagesJson      = !empty($finalImages) ? json_encode($finalImages) : null;
             $coverImage      = $finalImages[0] ?? ($dest['cover_image'] ?? null);
             // If the original cover_image was removed, use next available
@@ -76,17 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->prepare(
                 'UPDATE destinations
-                 SET name=?, province_id=?, category_id=?, short_description=?, description=?,
+                 SET name=?, province_id=?, municipality_id=?, category_id=?, short_description=?, description=?,
                      address=?, latitude=?, longitude=?, price_label=?, contact_number=?,
                      email=?, website_url=?, facebook_url=?, opening_time=?, closing_time=?, open_days=?,
                      cover_image=?, images=?, is_active=?, is_featured=?, updated_at=NOW()
                  WHERE id=?'
             )->execute([
-                $name, $provinceId, $categoryId, $shortDesc, $desc,
+                $name, $provinceId, $municipalityId, $categoryId, $shortDesc, $desc,
                 $address, $lat, $lng, $priceLabel, $contact,
                 $email ?: null, $website ?: null, $facebook ?: null, $openTime, $closeTime, $openDaysJson,
                 $coverImage, $imagesJson, $isActive, $isFeatured, $id
             ]);
+            logAdminActivity($pdo, (int) $_SESSION['user_id'], 'update_destination', 'destination', $id, "Updated destination \"{$name}\"");
 
             // Reload
             $stmt = $pdo->prepare('SELECT d.*, p.name AS province_name, ac.name AS category_name FROM destinations d LEFT JOIN provinces p ON d.province_id = p.id LEFT JOIN activity_categories ac ON d.category_id = ac.id WHERE d.id = ?');
@@ -102,6 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $provinces  = $pdo->query('SELECT id, name FROM provinces ORDER BY name')->fetchAll();
 $categories = $pdo->query('SELECT id, name FROM activity_categories ORDER BY name')->fetchAll();
 $existingImages = ($dest['images'] ?? null) ? json_decode($dest['images'], true) : [];
+
+// Pre-load municipalities for the current province
+$editMunicipalities = [];
+if (!empty($dest['province_id'])) {
+    $mStmt = $pdo->prepare('SELECT id, name FROM municipalities WHERE province_id = ? ORDER BY name');
+    $mStmt->execute([$dest['province_id']]);
+    $editMunicipalities = $mStmt->fetchAll();
+}
 ?>
 <?php include '../includes/header.php'; ?>
 <div class="d-wrap">
@@ -120,9 +130,17 @@ $existingImages = ($dest['images'] ?? null) ? json_decode($dest['images'], true)
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="rf-g"><label class="rf-lbl">Name *</label><input class="rf-ctrl" name="name" required value="<?php echo escape($dest['name']); ?>"></div>
         <div class="rf-g"><label class="rf-lbl">Province *</label>
-          <select class="rf-ctrl" name="province_id" required>
+          <select class="rf-ctrl" name="province_id" id="editProvinceSelect" required>
             <?php foreach ($provinces as $p): ?>
             <option value="<?php echo $p['id']; ?>" <?php echo $dest['province_id'] == $p['id'] ? 'selected' : ''; ?>><?php echo escape($p['name']); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="rf-g"><label class="rf-lbl">Municipality</label>
+          <select class="rf-ctrl" name="municipality_id" id="editMunicipalitySelect">
+            <option value="">— None —</option>
+            <?php foreach ($editMunicipalities as $m): ?>
+            <option value="<?php echo $m['id']; ?>" <?php echo ($dest['municipality_id'] ?? null) == $m['id'] ? 'selected' : ''; ?>><?php echo escape($m['name']); ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -199,4 +217,27 @@ $existingImages = ($dest['images'] ?? null) ? json_decode($dest['images'], true)
 </main>
 </div>
 <script src="/doon-app/assets/js/main.js"></script>
+<script>
+(function () {
+  var provSel = document.getElementById('editProvinceSelect');
+  var muniSel = document.getElementById('editMunicipalitySelect');
+  if (!provSel || !muniSel) return;
+  var currentMuni = '<?php echo (int) ($dest['municipality_id'] ?? 0); ?>';
+
+  provSel.addEventListener('change', function () {
+    var pid = this.value;
+    muniSel.innerHTML = '<option value="">Loading...</option>';
+    if (!pid) { muniSel.innerHTML = '<option value="">— None —</option>'; return; }
+    fetch('/doon-app/api/municipalities.php?province_id=' + pid, { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        muniSel.innerHTML = '<option value="">— None —</option>'
+          + data.map(function (m) {
+              return '<option value="' + m.id + '">' + m.name + '</option>';
+            }).join('');
+      })
+      .catch(function () { muniSel.innerHTML = '<option value="">Could not load</option>'; });
+  });
+}());
+</script>
 <?php include '../includes/footer.php'; ?>

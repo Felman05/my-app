@@ -141,6 +141,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             count($recommendations),
             $elapsed
         ]);
+
+        // Save each result to recommendation_results
+        $requestId = (int) $pdo->lastInsertId();
+        if ($requestId && !empty($recommendations)) {
+            $total = count($recommendations);
+            $resStmt = $pdo->prepare(
+                'INSERT INTO recommendation_results (request_id, destination_id, score, rank_position, created_at)
+                 VALUES (?, ?, ?, ?, NOW())'
+            );
+            foreach ($recommendations as $rank => $rec) {
+                $score = round(1 - ($rank / $total), 4);
+                $resStmt->execute([$requestId, $rec['id'], $score, $rank + 1]);
+            }
+        }
     } catch (Exception $e) {}
 }
 ?>

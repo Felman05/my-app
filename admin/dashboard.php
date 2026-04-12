@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/db.php';
 require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 requireRole('admin');
 $pageTitle = 'Admin Dashboard';
 $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.css"><link rel="stylesheet" href="/doon-app/assets/css/components.css">';
@@ -24,6 +25,14 @@ try {
          LIMIT 5'
     )->fetchAll();
 
+    // Recent admin activity
+    $recentActivity = $pdo->query(
+        'SELECT al.action, al.model_type, al.model_id, al.description, al.created_at, u.name AS admin_name
+         FROM admin_activity_logs al
+         JOIN users u ON al.admin_id = u.id
+         ORDER BY al.created_at DESC LIMIT 10'
+    )->fetchAll();
+
     // Destination counts per province
     $provinceCounts = $pdo->query(
         'SELECT p.name, COUNT(d.id) as cnt
@@ -37,6 +46,7 @@ try {
     $viewCount = $itinCount = $recCount = 0;
     $pendingListings = [];
     $provinceCounts = [];
+    $recentActivity = [];
 }
 ?>
 <?php include '../includes/header.php'; ?>
@@ -107,6 +117,25 @@ try {
       <?php endif; ?>
     </section>
   </div>
+
+  <section class="dc" style="margin-top:16px;">
+    <div class="dc-head"><div><div class="dc-title">Recent Admin Activity</div><div class="dc-sub">Last 10 actions across all admins</div></div></div>
+    <div class="dest-list" style="margin-top:8px;">
+      <?php if (empty($recentActivity)): ?>
+      <div class="dest-row" style="opacity:.5;">No activity recorded yet.</div>
+      <?php else: ?>
+      <?php foreach ($recentActivity as $log): ?>
+      <div class="dest-row" style="gap:12px;">
+        <div style="flex:1;">
+          <div class="dest-name" style="font-size:.85rem;"><?php echo escape($log['description'] ?? ucfirst(str_replace('_', ' ', $log['action']))); ?></div>
+          <div class="dest-meta"><?php echo escape($log['admin_name']); ?> &mdash; <?php echo formatDate($log['created_at'], 'M d, Y g:i A'); ?></div>
+        </div>
+        <span class="badge"><?php echo escape(str_replace('_', ' ', $log['action'])); ?></span>
+      </div>
+      <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </section>
 </main>
 </div>
 <script src="/doon-app/assets/js/main.js"></script>

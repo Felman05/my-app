@@ -17,6 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle'])) {
     if ($tid) {
         try {
             $pdo->prepare("UPDATE destinations SET $field = 1 - $field, updated_at = NOW() WHERE id = ?")->execute([$tid]);
+            logAdminActivity($pdo, (int) $_SESSION['user_id'], "toggle_{$field}", 'destination', $tid, "Toggled {$field} on destination #{$tid}");
             $message = 'Updated.';
         } catch (Exception $e) { $error = 'Update failed.'; }
     }
@@ -42,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dest'])) {
     $openTime    = trim($_POST['opening_time'] ?? '') ?: null;
     $closeTime   = trim($_POST['closing_time'] ?? '') ?: null;
     $openDays    = $_POST['open_days'] ?? [];
-    $openDaysJson = !empty($openDays) ? json_encode([...$openDays]) : null;
+    $openDaysJson  = !empty($openDays) ? json_encode([...$openDays]) : null;
+    $municipalityId = (int) ($_POST['municipality_id'] ?? 0) ?: null;
     $isActive    = isset($_POST['is_active']) ? 1 : 0;
     $isFeatured  = isset($_POST['is_featured']) ? 1 : 0;
 
@@ -58,12 +60,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dest'])) {
             $imagesJson = !empty($newImages) ? json_encode($newImages) : null;
             $pdo->prepare(
                 'INSERT INTO destinations
-                    (province_id, category_id, name, slug, short_description, description, address,
+                    (province_id, municipality_id, category_id, name, slug, short_description, description, address,
                      latitude, longitude, price_label, contact_number, email, website_url, facebook_url,
                      opening_time, closing_time, open_days, cover_image, images,
                      is_active, is_featured, is_verified, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())'
-            )->execute([$provinceId, $categoryId, $name, $slug, $shortDesc, $desc, $address, $lat, $lng, $priceLabel, $contact, $email ?: null, $website ?: null, $facebook ?: null, $openTime, $closeTime, $openDaysJson, $coverImage, $imagesJson, $isActive, $isFeatured]);
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())'
+            )->execute([$provinceId, $municipalityId, $categoryId, $name, $slug, $shortDesc, $desc, $address, $lat, $lng, $priceLabel, $contact, $email ?: null, $website ?: null, $facebook ?: null, $openTime, $closeTime, $openDaysJson, $coverImage, $imagesJson, $isActive, $isFeatured]);
+            $newId = (int) $pdo->lastInsertId();
+            logAdminActivity($pdo, (int) $_SESSION['user_id'], 'create_destination', 'destination', $newId, "Created destination \"{$name}\"");
             $message = 'Destination "' . htmlspecialchars($name) . '" added.';
         } catch (Exception $e) {
             $error = 'Failed to add destination: ' . $e->getMessage();
@@ -115,9 +119,14 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="rf-g"><label class="rf-lbl">Name *</label><input class="rf-ctrl" name="name" required></div>
         <div class="rf-g"><label class="rf-lbl">Province *</label>
-          <select class="rf-ctrl" name="province_id" required>
+          <select class="rf-ctrl" name="province_id" id="addProvinceSelect" required>
             <option value="">Select</option>
             <?php foreach ($provinces as $p): ?><option value="<?php echo $p['id']; ?>"><?php echo escape($p['name']); ?></option><?php endforeach; ?>
+          </select>
+        </div>
+        <div class="rf-g"><label class="rf-lbl">Municipality</label>
+          <select class="rf-ctrl" name="municipality_id" id="addMunicipalitySelect">
+            <option value="">Select province first</option>
           </select>
         </div>
         <div class="rf-g"><label class="rf-lbl">Category *</label>
@@ -319,6 +328,29 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeModal();
   });
+}());
+
+// Municipality loader for add form
+(function () {
+  var provSel  = document.getElementById('addProvinceSelect');
+  var muniSel  = document.getElementById('addMunicipalitySelect');
+  if (!provSel || !muniSel) return;
+
+  function loadMunicipalities(provinceId, selected) {
+    muniSel.innerHTML = '<option value="">Loading...</option>';
+    if (!provinceId) { muniSel.innerHTML = '<option value="">Select province first</option>'; return; }
+    fetch('/doon-app/api/municipalities.php?province_id=' + provinceId, { credentials: 'same-origin' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        muniSel.innerHTML = '<option value="">Select municipality (optional)</option>'
+          + data.map(function (m) {
+              return '<option value="' + m.id + '"' + (String(m.id) === String(selected) ? ' selected' : '') + '>' + m.name + '</option>';
+            }).join('');
+      })
+      .catch(function () { muniSel.innerHTML = '<option value="">Could not load</option>'; });
+  }
+
+  provSel.addEventListener('change', function () { loadMunicipalities(this.value, ''); });
 }());
 </script>
 <?php include '../includes/footer.php'; ?>
