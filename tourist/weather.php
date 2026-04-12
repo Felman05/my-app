@@ -30,6 +30,25 @@ $provinces = ['Batangas', 'Laguna', 'Cavite', 'Rizal', 'Quezon'];
     </div>
   </section>
 
+  <!-- 5-Day Forecast -->
+  <section class="dc" style="margin-top:16px;" id="forecast-section">
+    <div class="dc-head" style="margin-bottom:12px;">
+      <div>
+        <div class="dc-title">5-Day Forecast</div>
+        <div class="dc-sub">Select a province to see the outlook</div>
+      </div>
+      <select id="forecastProvince" class="rf-ctrl" style="width:auto;min-width:140px;">
+        <option value="">— Select Province —</option>
+        <?php foreach ($provinces as $p): ?>
+        <option value="<?php echo strtolower($p); ?>"><?php echo escape($p); ?></option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div id="forecastGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">
+      <div style="grid-column:1/-1;text-align:center;opacity:.5;padding:16px 0;">Choose a province above.</div>
+    </div>
+  </section>
+
   <section class="dc" style="margin-top:16px;">
     <div class="dc-title" style="margin-bottom:8px;">Advisory Guide</div>
     <table class="d-table">
@@ -137,6 +156,64 @@ $provinces = ['Batangas', 'Laguna', 'Cavite', 'Rizal', 'Quezon'];
       document.querySelectorAll('.wx-cond').forEach(el => { el.textContent = 'Unavailable'; });
     });
 })();
+</script>
+<script>
+(function () {
+  const sel      = document.getElementById('forecastProvince');
+  const grid     = document.getElementById('forecastGrid');
+  const titleSub = document.querySelector('#forecast-section .dc-sub');
+  if (!sel || !grid) return;
+
+  function iconFromCondition(c) {
+    c = String(c || '').toLowerCase();
+    if (c.includes('thunder')) return '⚡';
+    if (c.includes('rain') || c.includes('drizzle')) return '🌧';
+    if (c.includes('cloud')) return '☁';
+    if (c.includes('mist') || c.includes('fog') || c.includes('haze')) return '🌫';
+    if (c.includes('clear') || c.includes('sunny')) return '☀';
+    return '🌤';
+  }
+
+  function capitalize(s) {
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
+
+  sel.addEventListener('change', function () {
+    const province = this.value;
+    if (!province) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:.5;padding:16px 0;">Choose a province above.</div>';
+      if (titleSub) titleSub.textContent = 'Select a province to see the outlook';
+      return;
+    }
+
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:.5;padding:16px 0;">Loading forecast...</div>';
+
+    fetch('/doon-app/api/weather.php?action=forecast&province=' + encodeURIComponent(province), { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(res => {
+        if (!res.success || !Array.isArray(res.data?.forecast)) throw new Error(res.error || 'No data');
+
+        if (titleSub) titleSub.textContent = res.data.province + ' — next ' + res.data.forecast.length + ' days';
+
+        grid.innerHTML = res.data.forecast.map(day => `
+          <div class="wx-cell" style="flex-direction:column;text-align:center;padding:12px 8px;">
+            <div style="font-size:.72rem;font-weight:600;opacity:.7;margin-bottom:4px;">${day.day}</div>
+            <span class="wx-ico" style="font-size:1.6rem;">${iconFromCondition(day.condition)}</span>
+            <div style="margin:4px 0;font-size:.9rem;">
+              <span style="font-weight:600;">${day.max_temp !== null ? day.max_temp + '°' : '--'}</span>
+              <span style="opacity:.55;margin-left:4px;">${day.min_temp !== null ? day.min_temp + '°' : '--'}</span>
+            </div>
+            <div style="font-size:.72rem;opacity:.7;">${capitalize(day.condition)}</div>
+            ${day.humidity !== null ? `<div style="font-size:.68rem;opacity:.55;margin-top:3px;">💧 ${day.humidity}%</div>` : ''}
+            ${day.wind !== null ? `<div style="font-size:.68rem;opacity:.55;">💨 ${day.wind} m/s</div>` : ''}
+          </div>
+        `).join('');
+      })
+      .catch(err => {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;opacity:.5;padding:16px 0;">Forecast unavailable: ' + err.message + '</div>';
+      });
+  });
+}());
 </script>
 <script src="/doon-app/assets/js/main.js"></script>
 <?php include '../includes/footer.php'; ?>

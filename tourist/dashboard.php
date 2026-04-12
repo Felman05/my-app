@@ -68,7 +68,6 @@ try {
         <p class="d-page-sub">Welcome back, <?php echo escape($currentUser['name']); ?>. Plan your next trip.</p>
       </div>
       <div class="d-actions">
-        <button class="d-ico-btn">N<span class="notif-dot"></span></button>
         <a class="d-ava-btn" href="/doon-app/tourist/profile.php"><?php echo strtoupper(substr($currentUser['name'], 0, 1)); ?></a>
       </div>
     </div>
@@ -77,7 +76,16 @@ try {
       <article class="kpi"><div class="kpi-lbl">Saved Destinations</div><div class="kpi-val"><?php echo (int) $favCount; ?></div><div class="kpi-sub">Personal picks</div></article>
       <article class="kpi"><div class="kpi-lbl">Itineraries</div><div class="kpi-val"><?php echo (int) $itineraryCount; ?></div><div class="kpi-sub">Active plans</div></article>
       <article class="kpi"><div class="kpi-lbl">Reviews Posted</div><div class="kpi-val"><?php echo count($recentReviews); ?></div><div class="kpi-sub">Community input</div></article>
-      <article class="kpi"><div class="kpi-lbl">Profile Completion</div><div class="kpi-val"><?php echo $profile ? '75%' : '25%'; ?></div><div class="kpi-sub">Complete profile for better recommendations</div></article>
+      <article class="kpi"><div class="kpi-lbl">Profile Completion</div><div class="kpi-val"><?php
+        $completion = 0;
+        if ($profile) {
+            $completion = 25;
+            if (!empty($profile['generational_profile'])) $completion += 25;
+            if (!empty($profile['preferred_budget']))      $completion += 25;
+            if (!empty($profile['travel_style']))          $completion += 25;
+        }
+        echo $completion . '%';
+      ?></div><div class="kpi-sub"><a href="/doon-app/tourist/profile.php">Complete profile for better picks</a></div></article>
     </section>
 
     <div class="g31 mb20">
@@ -174,9 +182,9 @@ try {
   if (!grid) return;
 
   var condIcons = {
-    clear: 'S', sunny: 'S', clouds: 'C', rain: 'R',
-    drizzle: 'R', thunderstorm: 'T', mist: 'M', fog: 'M',
-    haze: 'M', snow: 'W', wind: 'W'
+    clear: '☀', sunny: '☀', clouds: '☁', rain: '🌧',
+    drizzle: '🌧', thunderstorm: '⚡', mist: '🌫', fog: '🌫',
+    haze: '🌫', snow: '❄', wind: '💨'
   };
 
   function iconFor(condition) {

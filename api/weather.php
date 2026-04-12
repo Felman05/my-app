@@ -79,6 +79,78 @@ if ($action === 'single') {
     exit;
 }
 
+if ($action === 'forecast') {
+    $province = strtolower(trim($_GET['province'] ?? ''));
+    if (!isset($locations[$province])) {
+        http_response_code(400);
+        echo jsonResponse(false, null, 'Unknown province.');
+        exit;
+    }
+
+    $loc = $locations[$province];
+    $url = sprintf(
+        'https://api.openweathermap.org/data/2.5/forecast?lat=%s&lon=%s&appid=%s&units=metric&cnt=40',
+        urlencode($loc['lat']),
+        urlencode($loc['lon']),
+        urlencode($apiKey)
+    );
+
+    $context  = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 12, 'ignore_errors' => true]]);
+    $response = @file_get_contents($url, false, $context);
+
+    if ($response === false) {
+        http_response_code(502);
+        echo jsonResponse(false, null, 'Failed to fetch forecast.');
+        exit;
+    }
+
+    $data = json_decode($response, true);
+    if (!is_array($data) || (isset($data['cod']) && (int) $data['cod'] !== 200)) {
+        http_response_code(502);
+        echo jsonResponse(false, null, 'Forecast API error.');
+        exit;
+    }
+
+    // Group 3-hour entries into daily summaries
+    $days = [];
+    foreach ($data['list'] ?? [] as $entry) {
+        $date = date('Y-m-d', $entry['dt']);
+        if (!isset($days[$date])) {
+            $days[$date] = ['temps' => [], 'conditions' => [], 'humidity' => [], 'wind' => []];
+        }
+        if (isset($entry['main']['temp']))       $days[$date]['temps'][]      = (float) $entry['main']['temp'];
+        if (isset($entry['weather'][0]['description'])) $days[$date]['conditions'][] = $entry['weather'][0]['description'];
+        if (isset($entry['main']['humidity']))   $days[$date]['humidity'][]   = (int) $entry['main']['humidity'];
+        if (isset($entry['wind']['speed']))      $days[$date]['wind'][]       = (float) $entry['wind']['speed'];
+    }
+
+    $forecast = [];
+    foreach ($days as $date => $day) {
+        $temps = $day['temps'];
+        $hums  = $day['humidity'];
+        $winds = $day['wind'];
+
+        // Most frequent condition for the day
+        $condCount = array_count_values($day['conditions']);
+        arsort($condCount);
+        reset($condCount);
+        $condition = key($condCount) ?: 'Unavailable';
+
+        $forecast[] = [
+            'date'      => $date,
+            'day'       => date('D, M j', strtotime($date)),
+            'min_temp'  => $temps ? (int) round(min($temps)) : null,
+            'max_temp'  => $temps ? (int) round(max($temps)) : null,
+            'condition' => $condition,
+            'humidity'  => $hums  ? (int) round(array_sum($hums)  / count($hums))  : null,
+            'wind'      => $winds ? round(array_sum($winds) / count($winds), 1)     : null,
+        ];
+    }
+
+    echo jsonResponse(true, ['province' => $loc['name'], 'forecast' => $forecast]);
+    exit;
+}
+
 $result = [];
 foreach ($locations as $key => $location) {
     $weather = fetchOpenWeather($location, $apiKey);
