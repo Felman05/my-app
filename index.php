@@ -12,6 +12,19 @@ $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/components.c
 
 $currentUser = getCurrentUser();
 
+// Auto-migrate landing_image column
+try { $pdo->exec('ALTER TABLE provinces ADD COLUMN IF NOT EXISTS landing_image VARCHAR(255) NULL'); } catch (Exception $e) {}
+
+$provGrad  = [
+    'Batangas' => 'linear-gradient(150deg,#7c2d12,#c2410c)',
+    'Laguna'   => 'linear-gradient(150deg,#14532d,#16a34a)',
+    'Cavite'   => 'linear-gradient(150deg,#1e3a5f,#2563eb)',
+    'Rizal'    => 'linear-gradient(150deg,#292524,#57534e)',
+    'Quezon'   => 'linear-gradient(150deg,#0c4a6e,#0ea5e9)',
+    'default'  => 'linear-gradient(150deg,#2d3748,#4a5568)',
+];
+$provEmoji = ['Batangas'=>'🌋','Laguna'=>'🏞️','Cavite'=>'🏰','Rizal'=>'🌿','Quezon'=>'🌊'];
+
 // Fetch landing page data
 try {
     // Get stats
@@ -132,15 +145,44 @@ try {
       <h2 class="section-title" style="color: #fff;">Explore CALABARZON</h2>
       <p class="section-sub" style="color: rgba(255,255,255,.55);">Jump into each province and browse local attractions.</p>
     </div>
-    <div class="prov-grid">
-      <?php foreach ($provinces as $province): ?>
-        <a class="prov-card" href="/doon-app/tourist/discover.php?province_id=<?php echo $province['id']; ?>">
-          <span class="prov-emo">PR</span>
-          <div class="prov-name"><?php echo escape($province['name']); ?></div>
-          <div class="prov-n"><?php echo (int) $province['destination_count']; ?> destinations</div>
-          <div class="prov-bar"></div>
-        </a>
-      <?php endforeach; ?>
+    <div class="prov-carousel" id="provCarousel">
+      <div class="prov-c-viewport">
+        <?php foreach ($provinces as $i => $province):
+            $grad  = $provGrad[$province['name']] ?? $provGrad['default'];
+            $emoji = $provEmoji[$province['name']] ?? '📍';
+            $cnt   = (int) $province['destination_count'];
+        ?>
+        <div class="prov-c-slide"<?php echo $i === 0 ? ' style="opacity:1;pointer-events:all;"' : ''; ?>>
+          <?php if (!empty($province['landing_image'])): ?>
+          <img class="prov-c-img" src="/doon-app/<?php echo escape($province['landing_image']); ?>" alt="<?php echo escape($province['name']); ?>">
+          <?php else: ?>
+          <div class="prov-c-fallback" style="background:<?php echo $grad; ?>;"><?php echo $emoji; ?></div>
+          <?php endif; ?>
+          <div class="prov-c-overlay"></div>
+          <div class="prov-c-body">
+            <div>
+              <div class="prov-c-kicker">Province &middot; CALABARZON</div>
+              <div class="prov-c-name"><?php echo escape($province['name']); ?></div>
+              <div class="prov-c-count"><?php echo $cnt; ?> destination<?php echo $cnt !== 1 ? 's' : ''; ?></div>
+            </div>
+            <a class="prov-c-cta" href="/doon-app/tourist/discover.php?province_id=<?php echo $province['id']; ?>">Explore <?php echo escape($province['name']); ?> &rarr;</a>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php if (count($provinces) > 1): ?>
+      <button class="prov-c-btn prov-c-prev" aria-label="Previous province">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M13 4L7 10L13 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="prov-c-btn prov-c-next" aria-label="Next province">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="prov-c-dots">
+        <?php foreach ($provinces as $i => $province): ?>
+        <button class="prov-c-dot<?php echo $i === 0 ? ' active' : ''; ?>" data-index="<?php echo $i; ?>" aria-label="<?php echo escape($province['name']); ?>"></button>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
     </div>
   </div>
 </section>

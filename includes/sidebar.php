@@ -33,7 +33,6 @@ function isActive($page) {
             <a href="/doon-app/tourist/favorites.php" class="sb-item <?php echo isActive('favorites.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-heart"></i></span>Favorites</a>
             <a href="/doon-app/tourist/directory.php" class="sb-item <?php echo isActive('directory.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-book"></i></span>Directory</a>
             <a href="/doon-app/tourist/chatbot.php" class="sb-item <?php echo isActive('chatbot.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-comments"></i></span>Chatbot</a>
-            <a href="/doon-app/tourist/weather.php" class="sb-item <?php echo isActive('weather.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-cloud-sun"></i></span>Weather</a>
 
             <div class="sb-section">Account</div>
             <a href="/doon-app/tourist/profile.php" class="sb-item <?php echo isActive('profile.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-user"></i></span>Profile</a>

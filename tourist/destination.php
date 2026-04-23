@@ -344,6 +344,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
       <div class="divider"></div>
 
+      <!-- 7-day weather forecast -->
+      <?php $provinceSlug = strtolower($destination['province_name'] ?? ''); ?>
+      <?php if ($provinceSlug): ?>
+      <div style="margin-bottom:4px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--i4);margin-bottom:8px;">
+          Weather in <?php echo escape($destination['province_name']); ?>
+        </div>
+        <div id="destForecastLoading" style="font-size:12px;color:var(--i4);">Loading forecast...</div>
+        <div id="destForecastCards" style="display:none;flex-wrap:wrap;gap:5px;"></div>
+        <div id="destForecastErr" style="font-size:12px;color:#b91c1c;display:none;">Forecast unavailable.</div>
+      </div>
+      <div class="divider"></div>
+      <?php endif; ?>
+
       <?php if ($itinerarySuccess): ?>
       <div class="alert ok" style="margin-bottom:8px;">Added to itinerary!</div>
       <?php endif; ?>
@@ -372,5 +386,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 </main>
 </div>
 <script src="/doon-app/assets/js/main.js"></script>
+<?php if ($provinceSlug): ?>
+<script>
+(function () {
+  var province  = <?php echo json_encode($provinceSlug); ?>;
+  var loading   = document.getElementById('destForecastLoading');
+  var cardsEl   = document.getElementById('destForecastCards');
+  var errEl     = document.getElementById('destForecastErr');
+
+  var weatherIcons = {
+    'clear':'☀️','sunny':'☀️','clouds':'☁️','overcast':'☁️',
+    'rain':'🌧️','drizzle':'🌦️','thunderstorm':'⛈️',
+    'mist':'🌫️','fog':'🌫️','haze':'🌫️','smoke':'🌫️',
+    'snow':'❄️','sleet':'🌨️'
+  };
+  function weatherEmoji(condition) {
+    var c = (condition || '').toLowerCase();
+    for (var key in weatherIcons) {
+      if (c.indexOf(key) !== -1) return weatherIcons[key];
+    }
+    return '🌤️';
+  }
+
+  fetch('/doon-app/api/weather.php?action=forecast&province=' + encodeURIComponent(province))
+    .then(function (r) { return r.json(); })
+    .then(function (json) {
+      loading.style.display = 'none';
+      if (!json.success || !json.data || !json.data.forecast) {
+        errEl.style.display = '';
+        return;
+      }
+      var forecast = json.data.forecast.slice(0, 7);
+      cardsEl.innerHTML = forecast.map(function (day) {
+        return '<div style="flex:1;min-width:52px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:7px 4px;text-align:center;">'
+          + '<div style="font-size:20px;line-height:1;">' + weatherEmoji(day.condition) + '</div>'
+          + '<div style="font-size:9px;font-weight:600;color:var(--i4);margin-top:3px;white-space:nowrap;">'
+            + (day.day ? day.day.split(',')[0] : day.date)
+          + '</div>'
+          + '<div style="font-size:11px;font-weight:700;color:var(--i);margin-top:3px;">'
+            + (day.max_temp !== null ? day.max_temp + '°' : '--')
+          + '</div>'
+          + '<div style="font-size:10px;color:var(--i4);">'
+            + (day.min_temp !== null ? day.min_temp + '°' : '--')
+          + '</div>'
+          + '<div style="font-size:9px;color:var(--i4);margin-top:2px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'
+            + (day.humidity !== null ? day.humidity + '% hum' : '')
+          + '</div>'
+          + '</div>';
+      }).join('');
+      cardsEl.style.display = 'flex';
+    })
+    .catch(function () {
+      loading.style.display = 'none';
+      errEl.style.display = '';
+    });
+}());
+</script>
+<?php endif; ?>
 <?php include '../includes/footer.php'; ?>
 

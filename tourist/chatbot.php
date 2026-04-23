@@ -119,11 +119,17 @@ try {
           <?php foreach ($messages as $msg): ?>
             <?php $meta = json_decode((string) ($msg['metadata'] ?? ''), true); ?>
             <?php $metaDestinations = $meta['destinations'] ?? ($meta['cards'] ?? []); ?>
-            <div class="chat-row <?php echo $msg['role'] === 'user' ? 'u' : 'b'; ?>">
-              <div class="chat-ava"><?php echo $msg['role'] === 'user' ? 'U' : 'B'; ?></div>
+            <?php if ($msg['role'] === 'user'): ?>
+            <div class="chat-row u">
+              <div class="chat-ava">U</div>
+              <div class="chat-bub"><?php echo nl2br(escape($msg['content'])); ?></div>
+            </div>
+            <?php else: ?>
+            <div class="chat-row b">
+              <div class="chat-ava">B</div>
               <div>
-                <div class="chat-bub"><?php echo nl2br(escape($msg['content'])); ?></div>
-                <?php if ($msg['role'] !== 'user' && !empty($metaDestinations) && is_array($metaDestinations)): ?>
+                <div class="chat-bub" data-md="1"><?php echo nl2br(escape($msg['content'])); ?></div>
+                <?php if (!empty($metaDestinations) && is_array($metaDestinations)): ?>
                 <div class="g2" style="margin-top:8px;gap:8px;">
                   <?php foreach ($metaDestinations as $card): ?>
                   <a href="/doon-app/tourist/destination.php?id=<?php echo (int) ($card['id'] ?? 0); ?>" class="dest-card">
@@ -134,6 +140,7 @@ try {
                 <?php endif; ?>
               </div>
             </div>
+            <?php endif; ?>
           <?php endforeach; ?>
           <?php if (empty($messages)): ?>
           <div class="chat-row b"><div class="chat-ava">B</div><div class="chat-bub">Hello! Ask me about weather, recommendations, saved places, or itinerary planning in CALABARZON.</div></div>
@@ -167,6 +174,13 @@ try {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function renderMarkdown(text) {
+      return escapeHtml(text)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*\n]+?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>');
     }
 
     function generateSessionToken() {
@@ -203,7 +217,11 @@ try {
 
     const bub = document.createElement('div');
     bub.className = 'chat-bub';
-    bub.textContent = text;
+    if (role === 'user') {
+      bub.textContent = text;
+    } else {
+      bub.innerHTML = renderMarkdown(text);
+    }
 
     row.appendChild(ava);
     row.appendChild(bub);
@@ -365,6 +383,12 @@ try {
     if (e.key === 'Escape') {
       closeHistory();
     }
+  });
+
+  // Re-render existing bot bubbles loaded from history
+  document.querySelectorAll('.chat-bub[data-md]').forEach(function (bub) {
+    const raw = bub.innerText || bub.textContent || '';
+    bub.innerHTML = renderMarkdown(raw);
   });
 
   scrollToBottom();

@@ -22,55 +22,70 @@ if ($itineraryId) {
         exit;
     }
 
-    // Handle adding a destination stop
+    $isExpired = !empty($itinerary['end_date']) && $itinerary['end_date'] < date('Y-m-d');
+
+    // Handle adding a destination stop (supports day ranges)
     $addError = '';
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_stop') {
-        $destId    = (int) ($_POST['destination_id'] ?? 0);
-        $dayNum    = max(1, (int) ($_POST['day_number'] ?? 1));
-        $notes     = trim($_POST['notes'] ?? '');
-        $transport = $_POST['transport_mode'] ?? null;
-
-        if (!$destId) {
-            $addError = 'Please select a destination.';
+        if ($isExpired) {
+            $addError = 'This itinerary has ended and can no longer be modified.';
         } else {
-            try {
-                $stmt = $pdo->prepare(
-                    'SELECT COALESCE(MAX(order_index),0)+1 FROM itinerary_items WHERE itinerary_id = ? AND day_number = ?'
-                );
-                $stmt->execute([$itineraryId, $dayNum]);
-                $nextOrder = (int) $stmt->fetchColumn();
+            $destId    = (int) ($_POST['destination_id'] ?? 0);
+            $dayFrom   = max(1, (int) ($_POST['day_from'] ?? 1));
+            $dayTo     = max($dayFrom, (int) ($_POST['day_to'] ?? $dayFrom));
+            $notes     = trim($_POST['notes'] ?? '');
+            $transport = $_POST['transport_mode'] ?? null;
+            $validTransport = ['walking','tricycle','jeepney','bus','car','boat','other'];
+            $safeTransport  = ($transport && in_array($transport, $validTransport)) ? $transport : null;
 
-                $stmt = $pdo->prepare(
-                    'INSERT INTO itinerary_items
-                        (itinerary_id, destination_id, day_number, order_index, notes, transport_mode, created_at)
-                     VALUES (?, ?, ?, ?, ?, ?, NOW())'
-                );
-                $validTransport = ['walking','tricycle','jeepney','bus','car','boat','other'];
-                $stmt->execute([
-                    $itineraryId, $destId, $dayNum, $nextOrder,
-                    $notes ?: null,
-                    ($transport && in_array($transport, $validTransport)) ? $transport : null
-                ]);
-                header('Location: /doon-app/tourist/itinerary.php?id=' . $itineraryId);
-                exit;
-            } catch (Exception $e) {
-                $addError = 'Failed to add stop.';
+            if (!$destId) {
+                $addError = 'Please select a destination.';
+            } elseif ($dayFrom > $dayTo) {
+                $addError = '"From" day cannot be after "To" day.';
+            } else {
+                try {
+                    $insertStmt = $pdo->prepare(
+                        'INSERT INTO itinerary_items
+                            (itinerary_id, destination_id, day_number, order_index, notes, transport_mode, created_at)
+                         VALUES (?, ?, ?, ?, ?, ?, NOW())'
+                    );
+                    $orderStmt = $pdo->prepare(
+                        'SELECT COALESCE(MAX(order_index),0)+1 FROM itinerary_items WHERE itinerary_id = ? AND day_number = ?'
+                    );
+
+                    for ($day = $dayFrom; $day <= $dayTo; $day++) {
+                        $orderStmt->execute([$itineraryId, $day]);
+                        $nextOrder = (int) $orderStmt->fetchColumn();
+                        $insertStmt->execute([
+                            $itineraryId, $destId, $day, $nextOrder,
+                            $notes ?: null,
+                            $safeTransport
+                        ]);
+                    }
+
+                    header('Location: /doon-app/tourist/itinerary.php?id=' . $itineraryId);
+                    exit;
+                } catch (Exception $e) {
+                    $addError = 'Failed to add stop.';
+                }
             }
         }
     }
 
     // Handle removing a stop
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'remove_stop') {
-        $itemId = (int) ($_POST['item_id'] ?? 0);
-        if ($itemId) {
-            try {
-                $stmt = $pdo->prepare(
-                    'DELETE ii FROM itinerary_items ii
-                     JOIN itineraries i ON ii.itinerary_id = i.id
-                     WHERE ii.id = ? AND i.user_id = ?'
-                );
-                $stmt->execute([$itemId, $currentUser['id']]);
-            } catch (Exception $e) {}
+        if (!$isExpired) {
+            $itemId = (int) ($_POST['item_id'] ?? 0);
+            if ($itemId) {
+                try {
+                    $stmt = $pdo->prepare(
+                        'DELETE ii FROM itinerary_items ii
+                         JOIN itineraries i ON ii.itinerary_id = i.id
+                         WHERE ii.id = ? AND i.user_id = ?'
+                    );
+                    $stmt->execute([$itemId, $currentUser['id']]);
+                } catch (Exception $e) {}
+            }
         }
         header('Location: /doon-app/tourist/itinerary.php?id=' . $itineraryId);
         exit;
@@ -97,12 +112,25 @@ if ($itineraryId) {
         $byDay[$stop['day_number']][] = $stop;
     }
 
-    // Load destinations for the add-stop form
+    // Load destinations for the add-stop form (include province slug for weather)
     try {
-        $allDests = $pdo->query('SELECT id, name FROM destinations WHERE is_active = 1 ORDER BY name LIMIT 300')->fetchAll();
+        $allDests = $pdo->query(
+            'SELECT d.id, d.name, LOWER(p.name) as province_slug
+             FROM destinations d
+             LEFT JOIN provinces p ON d.province_id = p.id
+             WHERE d.is_active = 1 ORDER BY d.name LIMIT 300'
+        )->fetchAll();
     } catch (Exception $e) { $allDests = []; }
 
-    $totalDays = max(1, (int) ($itinerary['total_days'] ?? 1));
+    // Map destination_id → province_slug for JS weather lookup
+    $destProvinceMap = [];
+    foreach ($allDests as $d) {
+        if (!empty($d['province_slug'])) {
+            $destProvinceMap[(int) $d['id']] = $d['province_slug'];
+        }
+    }
+
+    $totalDays = max(7, (int) ($itinerary['total_days'] ?? 1));
 
     include '../includes/header.php';
 ?>
@@ -127,6 +155,12 @@ if ($itineraryId) {
   </section>
   <?php endif; ?>
 
+  <?php if ($isExpired): ?>
+  <div class="alert warn" style="margin-bottom:16px;">
+    This itinerary has ended. The stops are read-only and can no longer be modified.
+  </div>
+  <?php endif; ?>
+
   <div class="g31">
     <section class="dc">
       <div class="dc-head"><div><div class="dc-title">Stops</div><div class="dc-sub"><?php echo count($stops); ?> destination(s)</div></div></div>
@@ -143,11 +177,13 @@ if ($itineraryId) {
               <div class="dest-meta"><?php echo escape($stop['province_name'] ?? ''); ?><?php echo $stop['transport_mode'] ? ' &bull; via ' . $stop['transport_mode'] : ''; ?></div>
               <?php if ($stop['notes']): ?><div class="dest-meta"><?php echo escape($stop['notes']); ?></div><?php endif; ?>
             </div>
+            <?php if (!$isExpired): ?>
             <form method="POST">
               <input type="hidden" name="action" value="remove_stop">
               <input type="hidden" name="item_id" value="<?php echo (int) $stop['id']; ?>">
               <button class="s-btn dark" type="submit" style="font-size:11px;padding:4px 10px;" onclick="return confirm('Remove this stop?');">Remove</button>
             </form>
+            <?php endif; ?>
           </div>
           <?php endforeach; ?>
         <?php else: ?>
@@ -158,6 +194,10 @@ if ($itineraryId) {
     </section>
 
     <aside class="dc">
+      <?php if ($isExpired): ?>
+      <div class="dc-title mb16">Add a Stop</div>
+      <div class="alert warn">This itinerary has ended. No new stops can be added.</div>
+      <?php else: ?>
       <div class="dc-title mb16">Add a Stop</div>
       <?php if ($addError): ?>
       <div class="alert err" style="margin-bottom:8px;"><?php echo escape($addError); ?></div>
@@ -166,20 +206,39 @@ if ($itineraryId) {
         <input type="hidden" name="action" value="add_stop">
         <div class="rf-g mb12">
           <label class="rf-lbl">Destination</label>
-          <select class="rf-ctrl" name="destination_id" required>
+          <select class="rf-ctrl" name="destination_id" id="stopDestSelect" required>
             <option value="">Select...</option>
             <?php foreach ($allDests as $d): ?>
             <option value="<?php echo $d['id']; ?>"><?php echo escape($d['name']); ?></option>
             <?php endforeach; ?>
           </select>
         </div>
-        <div class="rf-g mb12">
-          <label class="rf-lbl">Day</label>
-          <select class="rf-ctrl" name="day_number">
-            <?php for ($d = 1; $d <= $totalDays; $d++): ?>
-            <option value="<?php echo $d; ?>">Day <?php echo $d; ?></option>
-            <?php endfor; ?>
-          </select>
+
+        <!-- Weather forecast panel — shown after destination is picked -->
+        <div id="stopWeatherPanel" style="display:none;margin-bottom:12px;">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--i4);margin-bottom:6px;">Weather Forecast</div>
+          <div id="stopWeatherLoading" style="font-size:12px;color:var(--i4);">Loading...</div>
+          <div id="stopWeatherCards" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+          <div id="stopWeatherErr" style="font-size:12px;color:#b91c1c;display:none;">Could not load forecast.</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+          <div class="rf-g">
+            <label class="rf-lbl">From Day</label>
+            <select class="rf-ctrl" name="day_from" id="dayFromSelect">
+              <?php for ($d = 1; $d <= $totalDays; $d++): ?>
+              <option value="<?php echo $d; ?>">Day <?php echo $d; ?></option>
+              <?php endfor; ?>
+            </select>
+          </div>
+          <div class="rf-g">
+            <label class="rf-lbl">To Day</label>
+            <select class="rf-ctrl" name="day_to" id="dayToSelect">
+              <?php for ($d = 1; $d <= $totalDays; $d++): ?>
+              <option value="<?php echo $d; ?>">Day <?php echo $d; ?></option>
+              <?php endfor; ?>
+            </select>
+          </div>
         </div>
         <div class="rf-g mb12">
           <label class="rf-lbl">Transport</label>
@@ -200,11 +259,109 @@ if ($itineraryId) {
         </div>
         <button class="rf-go" type="submit">Add Stop</button>
       </form>
+      <?php endif; ?>
     </aside>
   </div>
 </main>
 </div>
 <script src="/doon-app/assets/js/main.js"></script>
+<script>
+(function () {
+  var destProvinceMap = <?php echo json_encode($destProvinceMap); ?>;
+
+  var weatherIcons = {
+    'clear': '☀️', 'sunny': '☀️', 'clouds': '☁️', 'overcast': '☁️',
+    'rain': '🌧️', 'drizzle': '🌦️', 'thunderstorm': '⛈️',
+    'mist': '🌫️', 'fog': '🌫️', 'haze': '🌫️', 'smoke': '🌫️',
+    'snow': '❄️', 'sleet': '🌨️', 'wind': '💨', 'tornado': '🌪️'
+  };
+
+  function weatherEmoji(condition) {
+    var c = (condition || '').toLowerCase();
+    for (var key in weatherIcons) {
+      if (c.indexOf(key) !== -1) return weatherIcons[key];
+    }
+    return '🌤️';
+  }
+
+  // Keep "To Day" >= "From Day"
+  var dayFrom = document.getElementById('dayFromSelect');
+  var dayTo   = document.getElementById('dayToSelect');
+  if (dayFrom && dayTo) {
+    dayFrom.addEventListener('change', function () {
+      var from = parseInt(this.value, 10);
+      var to   = parseInt(dayTo.value, 10);
+      if (to < from) dayTo.value = from;
+      // Disable options in "To" that are before "From"
+      Array.from(dayTo.options).forEach(function (opt) {
+        opt.disabled = parseInt(opt.value, 10) < from;
+      });
+    });
+  }
+
+  var lastProvince = null;
+  var panel   = document.getElementById('stopWeatherPanel');
+  var loading = document.getElementById('stopWeatherLoading');
+  var cards   = document.getElementById('stopWeatherCards');
+  var errMsg  = document.getElementById('stopWeatherErr');
+  var select  = document.getElementById('stopDestSelect');
+
+  if (!select || !panel) return;
+
+  select.addEventListener('change', function () {
+    var destId = parseInt(this.value, 10);
+    if (!destId) {
+      panel.style.display = 'none';
+      lastProvince = null;
+      return;
+    }
+
+    var province = destProvinceMap[destId];
+    if (!province) {
+      panel.style.display = 'none';
+      return;
+    }
+
+    // Skip refetch if same province
+    if (province === lastProvince) {
+      panel.style.display = '';
+      return;
+    }
+
+    lastProvince = province;
+    panel.style.display = '';
+    loading.style.display = '';
+    cards.style.display = 'none';
+    errMsg.style.display = 'none';
+    cards.innerHTML = '';
+
+    fetch('/doon-app/api/weather.php?action=forecast&province=' + encodeURIComponent(province))
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        loading.style.display = 'none';
+        if (!json.success || !json.data || !json.data.forecast) {
+          errMsg.style.display = '';
+          return;
+        }
+
+        var forecast = json.data.forecast.slice(0, 7);
+        cards.innerHTML = forecast.map(function (day) {
+          return '<div style="flex:1;min-width:48px;background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:6px 4px;text-align:center;">'
+            + '<div style="font-size:18px;line-height:1;">' + weatherEmoji(day.condition) + '</div>'
+            + '<div style="font-size:9px;font-weight:600;color:var(--i4);margin-top:3px;white-space:nowrap;">' + (day.day ? day.day.split(',')[0] : day.date) + '</div>'
+            + '<div style="font-size:11px;font-weight:700;color:var(--i);margin-top:2px;">' + (day.max_temp !== null ? day.max_temp + '°' : '--') + '</div>'
+            + '<div style="font-size:10px;color:var(--i4);">' + (day.min_temp !== null ? day.min_temp + '°' : '--') + '</div>'
+            + '</div>';
+        }).join('');
+        cards.style.display = 'flex';
+      })
+      .catch(function () {
+        loading.style.display = 'none';
+        errMsg.style.display = '';
+      });
+  });
+}());
+</script>
 <?php
     include '../includes/footer.php';
     exit;

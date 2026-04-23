@@ -59,13 +59,27 @@ button, input, select, textarea { font: inherit; }
 
 .prov-sec { background: var(--i); padding: 88px 52px; position: relative; overflow: hidden; }
 .prov-inner { max-width: 1160px; margin: 0 auto; position: relative; z-index: 1; }
-.prov-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); border-radius: var(--r3); overflow: hidden; margin-top: 48px; }
-.prov-card { background: rgba(255,255,255,.03); padding: 28px 20px; text-align: center; transition: background .15s; cursor: pointer; }
-.prov-card:hover { background: rgba(255,255,255,.08); }
-.prov-emo { font-size: 30px; margin-bottom: 12px; display: block; }
-.prov-name { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 700; color: rgba(255,255,255,.9); margin-bottom: 4px; letter-spacing: -.3px; }
-.prov-n { font-size: 11px; color: rgba(255,255,255,.3); }
-.prov-bar { width: 24px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.35); margin: 12px auto 0; }
+
+/* ── Province Carousel ──────────────────────────────────────── */
+.prov-carousel { position: relative; margin-top: 40px; }
+.prov-c-viewport { position: relative; width: 100%; height: 460px; border-radius: var(--r3); overflow: hidden; background: rgba(255,255,255,.04); }
+.prov-c-slide { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+.prov-c-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.prov-c-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 72px; }
+.prov-c-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.1) 55%, rgba(0,0,0,.48) 100%); }
+.prov-c-body { position: absolute; inset: 0; padding: 44px 52px; display: flex; flex-direction: column; justify-content: space-between; }
+.prov-c-kicker { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: rgba(255,255,255,.5); font-weight: 600; }
+.prov-c-name { font-family: 'Fraunces', serif; font-size: clamp(40px,5.5vw,72px); font-weight: 700; letter-spacing: -2px; color: #fff; line-height: 1; margin-top: 6px; }
+.prov-c-count { font-size: 14px; color: rgba(255,255,255,.6); margin-top: 8px; }
+.prov-c-cta { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.28); padding: 11px 24px; border-radius: 100px; backdrop-filter: blur(8px); transition: background .2s, border-color .2s; width: fit-content; }
+.prov-c-cta:hover { background: rgba(255,255,255,.24); border-color: rgba(255,255,255,.5); }
+.prov-c-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,.22); background: rgba(0,0,0,.32); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .18s, border-color .18s, transform .18s; backdrop-filter: blur(8px); z-index: 10; }
+.prov-c-btn:hover { background: rgba(0,0,0,.55); border-color: rgba(255,255,255,.45); transform: translateY(-50%) scale(1.08); }
+.prov-c-prev { left: 18px; }
+.prov-c-next { right: 18px; }
+.prov-c-dots { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10; }
+.prov-c-dot { height: 7px; width: 7px; border-radius: 100px; border: none; background: rgba(255,255,255,.3); cursor: pointer; transition: width .3s cubic-bezier(.4,0,.2,1), background .2s; padding: 0; }
+.prov-c-dot.active { width: 24px; background: #fff; }
 
 .section { padding: 72px 52px; }
 .section-head { margin-bottom: 20px; }
@@ -98,6 +112,10 @@ button, input, select, textarea { font: inherit; }
 @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
 @keyframes fu { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
+@media (prefers-reduced-motion: reduce) {
+  .prov-c-slide { transition: none !important; }
+}
+
 @media (max-width: 768px) {
   .d-sidebar { transform: translateX(-100%); transition: transform .25s ease; }
   .d-sidebar.open { transform: translateX(0); }
@@ -105,7 +123,9 @@ button, input, select, textarea { font: inherit; }
   .kpi-row.c4 { grid-template-columns: repeat(2,1fr); }
   .g2,.g3,.g31,.g13 { grid-template-columns: 1fr; }
   .rec-form { grid-template-columns: 1fr 1fr; }
-  .prov-grid { grid-template-columns: repeat(2,1fr); }
+  .prov-c-viewport { height: 320px; }
+  .prov-c-body { padding: 28px 24px; }
+  .prov-c-btn { display: none; }
   .strip { grid-template-columns: repeat(2,1fr); }
   .hero { padding: 90px 24px 60px; }
   #nav { padding: 0 24px; }

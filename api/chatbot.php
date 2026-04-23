@@ -59,7 +59,8 @@ function parseCsvModels($csv) {
 function detectIntents($message) {
     $m = normalizeText($message);
     return [
-        'weather' => (bool) preg_match('/\b(weather|forecast|temperature|temp|rain|humidity|wind|tomorrow|today)\b/i', $m),
+        'weather'  => (bool) preg_match('/\b(weather|temperature|temp|rain|humidity|wind|tomorrow|today)\b/i', $m),
+        'forecast' => (bool) preg_match('/\b(forecast|this\s+week|weekly|coming\s+days?|multi.?day|next\s+(?:\d+|few|several|two|three|four|five|six|seven|eight|nine|ten)\s+days?|(?:\d+|two|three|four|five|six|seven|eight|nine|ten)\s+days?\s+(?:forecast|weather)|7.?day|5.?day|week)\b/i', $m),
         'favorites' => (bool) preg_match('/\b(saved|favorite|favorites|my places|bookmarked)\b/i', $m),
         'recommend' => (bool) preg_match('/\b(recommend|suggest|suggestion|where to go|place|destination|visit|attraction|beach|resort|trip)\b/i', $m),
         'itinerary' => (bool) preg_match('/\b(itinerary|my trip|trip plan|plan my trip|schedule)\b/i', $m)
@@ -194,6 +195,80 @@ function getWeatherContext($message, $openWeatherApiKey) {
     return ['text' => implode("\n", $lines), 'data' => $collected];
 }
 
+function getForecastContext($message, $openWeatherApiKey) {
+    global $PROVINCE_LOCATIONS;
+
+    if (empty($openWeatherApiKey)) {
+        return ['text' => 'Weather forecast API key is missing.', 'data' => []];
+    }
+
+    $provinceKey = findProvinceInMessage($message);
+
+    if ($provinceKey === '' || !isset($PROVINCE_LOCATIONS[$provinceKey])) {
+        return [
+            'text' => '7-day forecasts are available for: Batangas, Laguna, Cavite, Rizal, Quezon. Ask the user to specify a province.',
+            'data' => []
+        ];
+    }
+
+    $target = $PROVINCE_LOCATIONS[$provinceKey];
+    $query = 'lat=' . urlencode((string) $target['lat'])
+        . '&lon=' . urlencode((string) $target['lon'])
+        . '&appid=' . urlencode($openWeatherApiKey)
+        . '&units=metric&cnt=56';
+
+    $data = fetchJsonFromUrl('https://api.openweathermap.org/data/2.5/forecast?' . $query);
+
+    if (!$data || empty($data['list'])) {
+        return ['text' => '7-day forecast for ' . $target['name'] . ': unavailable.', 'data' => []];
+    }
+
+    $daily = [];
+    foreach ($data['list'] as $entry) {
+        $day = date('Y-m-d', (int) ($entry['dt'] ?? 0));
+        if (!isset($daily[$day])) {
+            $daily[$day] = [
+                'label'      => date('l, M j', (int) ($entry['dt'] ?? 0)),
+                'temps'      => [],
+                'humidity'   => [],
+                'conditions' => []
+            ];
+        }
+        $daily[$day]['temps'][]    = (float) ($entry['main']['temp'] ?? 0);
+        $daily[$day]['humidity'][] = (int) ($entry['main']['humidity'] ?? 0);
+        $desc = $entry['weather'][0]['description'] ?? '';
+        if ($desc !== '') {
+            $daily[$day]['conditions'][] = $desc;
+        }
+    }
+
+    $lines = [$target['name'] . ' — 7-day weather forecast:'];
+    $collected = [];
+
+    foreach (array_slice($daily, 0, 7, true) as $dateKey => $day) {
+        $high = !empty($day['temps']) ? round(max($day['temps'])) : 'n/a';
+        $low  = !empty($day['temps']) ? round(min($day['temps'])) : 'n/a';
+        $avgHum = !empty($day['humidity'])
+            ? round(array_sum($day['humidity']) / count($day['humidity']))
+            : 'n/a';
+        $condCount = array_count_values($day['conditions']);
+        arsort($condCount);
+        $mainCond = !empty($condCount) ? (string) array_key_first($condCount) : 'n/a';
+        $lines[] = '  ' . $day['label'] . ': High ' . $high . 'C, Low ' . $low . 'C, ' . $mainCond . ', humidity ' . $avgHum . '%';
+        $collected[] = [
+            'province'  => $target['name'],
+            'date'      => $dateKey,
+            'day_label' => $day['label'],
+            'high'      => $high,
+            'low'       => $low,
+            'condition' => $mainCond,
+            'humidity'  => $avgHum
+        ];
+    }
+
+    return ['text' => implode("\n", $lines), 'data' => $collected];
+}
+
 function getFavoritesData($pdo, $userId) {
     $stmt = $pdo->prepare(
         'SELECT d.id, d.name, d.slug, d.short_description, d.price_label, d.avg_rating, p.name AS province_name
@@ -263,10 +338,14 @@ function formatDestinationsForResponse($rows) {
 
 function buildGeminiPrompt($message, $history, $contextBlocks) {
     $system = [];
-    $system[] = 'You are Doon Assistant, a helpful tourism guide for CALABARZON region (Batangas, Laguna, Cavite, Rizal, Quezon).';
-    $system[] = 'When recommending destinations, always include specific details from the database: name, location/province, price label, and rating.';
-    $system[] = 'If weather data is provided, use it and do not say that live weather is unavailable.';
-    $system[] = 'If recommending destinations and destination IDs are known, append each suggestion with [destination_id:<id>].';
+    $system[] = 'You are Doon Assistant — a smart, friendly, and knowledgeable assistant built into the Doon travel app.';
+    $system[] = 'You can answer ANY question the user asks, just like a capable general-purpose AI assistant (history, science, math, language, general advice, etc.).';
+    $system[] = 'You also have special expertise in CALABARZON tourism (Batangas, Laguna, Cavite, Rizal, Quezon): destinations, local activities, travel tips, weather, and itinerary planning.';
+    $system[] = 'When real-time data is provided in the context (weather, forecast, favorites, itineraries, destinations), always use it. Never tell the user that live data is unavailable when it has been provided.';
+    $system[] = 'If 7-day forecast data is provided, present each day clearly: **Day Name**: High X°C, Low X°C, condition, humidity X%.';
+    $system[] = 'Use **bold** for emphasis (day labels, destination names, key figures). Formatting is rendered by the client.';
+    $system[] = 'When recommending destinations from the database, include name, province, price label, and rating. Append each with [destination_id:<id>] when the ID is known.';
+    $system[] = 'Be concise, helpful, and conversational. Never refuse to answer a question just because it is not tourism-related.';
 
     $prompt = implode("\n", $system) . "\n\n";
 
@@ -318,7 +397,7 @@ function callGeminiFlash($apiKey, $prompt, $primaryModel, $fallbackModels = []) 
         ],
         'generationConfig' => [
             'temperature' => 0.7,
-            'maxOutputTokens' => 700
+            'maxOutputTokens' => 1200
         ]
     ];
 
@@ -513,6 +592,12 @@ try {
         $contextBlocks[] = $weatherContext['text'];
         $weatherData = $weatherContext['data'];
         $metadata['weather'] = $weatherContext['data'];
+    }
+
+    if ($intents['forecast']) {
+        $forecastContext = getForecastContext($message, $openWeatherApiKey);
+        $contextBlocks[] = $forecastContext['text'];
+        $metadata['forecast'] = $forecastContext['data'];
     }
 
     if ($intents['favorites']) {
