@@ -94,6 +94,18 @@ function getOrCreateSession($pdo, $userId, $sessionToken) {
         return $session;
     }
 
+    // Probabilistic cleanup: purge sessions older than 90 days ~1% of new-session requests
+    if (mt_rand(1, 100) === 1) {
+        try {
+            $pdo->exec(
+                'DELETE cm FROM chatbot_messages cm
+                 JOIN chatbot_sessions cs ON cm.session_id = cs.id
+                 WHERE cs.created_at < DATE_SUB(NOW(), INTERVAL 90 DAY)'
+            );
+            $pdo->exec("DELETE FROM chatbot_sessions WHERE created_at < DATE_SUB(NOW(), INTERVAL 90 DAY)");
+        } catch (Exception $e) {}
+    }
+
     $insert = $pdo->prepare(
         'INSERT INTO chatbot_sessions (user_id, session_token, context, created_at, updated_at)
          VALUES (?, ?, ?, NOW(), NOW())'

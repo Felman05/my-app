@@ -32,6 +32,7 @@ if ($addDestId) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $title        = trim($_POST['title'] ?? '');
     $description  = trim($_POST['description'] ?? '');
     $dateStart    = $_POST['date_start'] ?? '';
@@ -106,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <section class="dc" style="max-width:640px;">
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
       <?php if ($linkedDest): ?>
       <input type="hidden" name="add_dest_id" value="<?php echo $addDestId; ?>">
       <?php endif; ?>

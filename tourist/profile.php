@@ -19,6 +19,7 @@ $success = false;
 $error   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $genProfile    = $_POST['generational_profile'] ?? '';
     $prefBudget    = $_POST['preferred_budget'] ?? '';
     $travelStyle   = $_POST['travel_style'] ?? '';
@@ -80,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <section class="dc">
       <div class="dc-title mb16">Travel Preferences</div>
       <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <div class="rf-g mb16">
           <label class="rf-lbl">Generational Profile</label>
           <select class="rf-ctrl" name="generational_profile">

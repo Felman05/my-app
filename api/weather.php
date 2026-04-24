@@ -59,6 +59,24 @@ function fetchOpenWeather($location, $apiKey) {
     ];
 }
 
+// ── File-based weather cache (30-minute TTL) ──────────────────────────────
+define('WEATHER_CACHE_DIR', dirname(__DIR__) . '/cache/weather');
+define('WEATHER_CACHE_TTL', 1800); // 30 minutes
+
+function weatherCacheGet(string $key) {
+    $file = WEATHER_CACHE_DIR . '/' . preg_replace('/[^a-z0-9_]/', '_', $key) . '.json';
+    if (!file_exists($file) || (time() - filemtime($file)) > WEATHER_CACHE_TTL) {
+        return null;
+    }
+    $data = @json_decode(@file_get_contents($file), true);
+    return is_array($data) ? $data : null;
+}
+
+function weatherCacheSet(string $key, array $data): void {
+    $file = WEATHER_CACHE_DIR . '/' . preg_replace('/[^a-z0-9_]/', '_', $key) . '.json';
+    @file_put_contents($file, json_encode($data), LOCK_EX);
+}
+
 $action = $_GET['action'] ?? 'list';
 if ($action === 'single') {
     $province = strtolower(trim($_GET['province'] ?? ''));
@@ -68,11 +86,16 @@ if ($action === 'single') {
         exit;
     }
 
-    $weather = fetchOpenWeather($locations[$province], $apiKey);
+    $cacheKey = 'single_' . $province;
+    $weather  = weatherCacheGet($cacheKey);
     if ($weather === null) {
-        http_response_code(502);
-        echo jsonResponse(false, null, 'Failed to fetch weather.');
-        exit;
+        $weather = fetchOpenWeather($locations[$province], $apiKey);
+        if ($weather === null) {
+            http_response_code(502);
+            echo jsonResponse(false, null, 'Failed to fetch weather.');
+            exit;
+        }
+        weatherCacheSet($cacheKey, $weather);
     }
 
     echo jsonResponse(true, $weather);
@@ -87,7 +110,15 @@ if ($action === 'forecast') {
         exit;
     }
 
-    $loc = $locations[$province];
+    $loc      = $locations[$province];
+    $cacheKey = 'forecast_' . $province;
+    $cached   = weatherCacheGet($cacheKey);
+
+    if ($cached !== null) {
+        echo jsonResponse(true, $cached);
+        exit;
+    }
+
     $url = sprintf(
         'https://api.openweathermap.org/data/2.5/forecast?lat=%s&lon=%s&appid=%s&units=metric&cnt=40',
         urlencode($loc['lat']),
@@ -118,10 +149,10 @@ if ($action === 'forecast') {
         if (!isset($days[$date])) {
             $days[$date] = ['temps' => [], 'conditions' => [], 'humidity' => [], 'wind' => []];
         }
-        if (isset($entry['main']['temp']))       $days[$date]['temps'][]      = (float) $entry['main']['temp'];
-        if (isset($entry['weather'][0]['description'])) $days[$date]['conditions'][] = $entry['weather'][0]['description'];
-        if (isset($entry['main']['humidity']))   $days[$date]['humidity'][]   = (int) $entry['main']['humidity'];
-        if (isset($entry['wind']['speed']))      $days[$date]['wind'][]       = (float) $entry['wind']['speed'];
+        if (isset($entry['main']['temp']))               $days[$date]['temps'][]      = (float) $entry['main']['temp'];
+        if (isset($entry['weather'][0]['description']))  $days[$date]['conditions'][] = $entry['weather'][0]['description'];
+        if (isset($entry['main']['humidity']))           $days[$date]['humidity'][]   = (int) $entry['main']['humidity'];
+        if (isset($entry['wind']['speed']))              $days[$date]['wind'][]       = (float) $entry['wind']['speed'];
     }
 
     $forecast = [];
@@ -147,13 +178,28 @@ if ($action === 'forecast') {
         ];
     }
 
-    echo jsonResponse(true, ['province' => $loc['name'], 'forecast' => $forecast]);
+    $result = ['province' => $loc['name'], 'forecast' => $forecast];
+    weatherCacheSet($cacheKey, $result);
+    echo jsonResponse(true, $result);
+    exit;
+}
+
+$listCached = weatherCacheGet('list_all');
+if ($listCached !== null) {
+    echo jsonResponse(true, $listCached);
     exit;
 }
 
 $result = [];
 foreach ($locations as $key => $location) {
-    $weather = fetchOpenWeather($location, $apiKey);
+    $provCacheKey = 'single_' . $key;
+    $weather = weatherCacheGet($provCacheKey);
+    if ($weather === null) {
+        $weather = fetchOpenWeather($location, $apiKey);
+        if ($weather !== null) {
+            weatherCacheSet($provCacheKey, $weather);
+        }
+    }
     $result[] = [
         'key' => $key,
         'province' => $location['name'],
@@ -161,4 +207,5 @@ foreach ($locations as $key => $location) {
     ];
 }
 
+weatherCacheSet('list_all', $result);
 echo jsonResponse(true, $result);

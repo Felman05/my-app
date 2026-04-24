@@ -66,6 +66,7 @@ try {
 } catch (Exception $e) {}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $budget       = $_POST['budget'] ?? ($touristProfile['preferred_budget'] ?? '');
     $provinceId   = $_POST['province_id'] ?? null;
     $categoryId   = $_POST['category_id'] ?? null;
@@ -119,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ORDER BY $orderBy
             LIMIT 10";
 
+    $recommendError = '';
     try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -155,7 +157,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $resStmt->execute([$requestId, $rec['id'], $score, $rank + 1]);
             }
         }
-    } catch (Exception $e) {}
+    } catch (Exception $e) {
+        $recommendError = 'Recommendations are unavailable right now. Please try again.';
+        error_log('[recommend.php] Query failed: ' . $e->getMessage());
+    }
 }
 ?>
 <?php include '../includes/header.php'; ?>
@@ -168,6 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <section class="dc">
       <div class="dc-title mb16">Trip Preferences</div>
       <form method="POST" class="rec-form" style="grid-template-columns:1fr 1fr;">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <div class="rf-g">
           <label class="rf-lbl">Budget</label>
           <select class="rf-ctrl" name="budget">
@@ -248,7 +254,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="dest-rating">&#9733; <?php echo number_format((float) ($rec['avg_rating'] ?? 0), 1); ?></div>
       </a>
       <?php endforeach; ?>
-      <?php if (empty($recommendations) && $_SERVER['REQUEST_METHOD'] === 'POST'): ?>
+      <?php if (!empty($recommendError)): ?>
+      <div class="dest-row"><span style="color:#b91c1c;"><?php echo escape($recommendError); ?></span></div>
+      <?php elseif (empty($recommendations) && $_SERVER['REQUEST_METHOD'] === 'POST'): ?>
       <div class="dest-row">No destinations matched your preferences. Try adjusting the filters.</div>
       <?php elseif (empty($recommendations)): ?>
       <div class="dest-row">Fill in the form above and click Get Picks.</div>

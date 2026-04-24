@@ -21,6 +21,7 @@ try {
                 lpp.business_name, lpp.municipality, lpp.province
          FROM provider_listings pl
          JOIN local_provider_profiles lpp ON pl.provider_id = lpp.id
+         WHERE pl.status = "pending"
          ORDER BY pl.created_at ASC
          LIMIT 5'
     )->fetchAll();
@@ -99,7 +100,7 @@ try {
     </section>
 
     <section class="dc">
-      <div class="dc-head"><div><div class="dc-title">Approval Queue</div><div class="dc-sub">Pending provider listings</div></div><a class="s-btn" href="/doon-app/admin/providers.php">View all</a></div>
+      <div class="dc-head"><div><div class="dc-title">Approval Queue</div><div class="dc-sub"><?php echo (int) $provCount; ?> pending provider listing<?php echo $provCount != 1 ? 's' : ''; ?></div></div><a class="s-btn" href="/doon-app/admin/providers.php">View all <?php echo $provCount > 5 ? '(' . (int) $provCount . ')' : ''; ?></a></div>
       <?php if (empty($pendingListings)): ?>
       <div class="dest-row" style="opacity:.5;">No pending listings.</div>
       <?php else: ?>

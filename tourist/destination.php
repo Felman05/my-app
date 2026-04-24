@@ -13,7 +13,7 @@ $currentUser = getCurrentUser();
 $destId = (int) ($_GET['id'] ?? 0);
 
 if (!$destId) {
-    header('Location: /doon-app/tourist/discover.php');
+    header('Location: /doon-app/tourist/discover.php?msg=not_found');
     exit;
 }
 
@@ -32,7 +32,7 @@ try {
     $destination = $stmt->fetch();
 
     if (!$destination) {
-        header('Location: /doon-app/tourist/discover.php');
+        header('Location: /doon-app/tourist/discover.php?msg=not_found');
         exit;
     }
 
@@ -75,6 +75,7 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mark_helpful') {
+    verifyCsrf();
     $reviewId = (int) ($_POST['review_id'] ?? 0);
     if ($reviewId && !in_array($reviewId, $myVotedReviewIds)) {
         try {
@@ -96,6 +97,7 @@ $itinerarySuccess = false;
 $itineraryError   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_to_itinerary') {
+    verifyCsrf();
     $itId   = (int) ($_POST['itinerary_id'] ?? 0);
     $dayNum = max(1, (int) ($_POST['day_number'] ?? 1));
     $notes  = trim($_POST['notes'] ?? '');
@@ -136,6 +138,7 @@ $reviewError = '';
 $reviewSuccess = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'post_review') {
+    verifyCsrf();
     if ($hasReviewed) {
         $reviewError = 'You have already reviewed this destination.';
     } else {
@@ -183,6 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_favorite') {
+    verifyCsrf();
     try {
         if ($isFavorited) {
             $stmt = $pdo->prepare('DELETE FROM favorites WHERE user_id = ? AND destination_id = ?');
@@ -207,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       <h1 class="d-page-title"><?php echo escape($destination['name']); ?></h1>
       <p class="d-page-sub"><?php echo escape($destination['province_name']); ?>  -  <?php echo escape($destination['category_name']); ?></p>
     </div>
-    <form method="POST"><input type="hidden" name="action" value="toggle_favorite"><button class="s-btn dark" type="submit"><?php echo $isFavorited ? 'Saved' : 'Save'; ?></button></form>
+    <form method="POST"><input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>"><input type="hidden" name="action" value="toggle_favorite"><button class="s-btn dark" type="submit"><?php echo $isFavorited ? 'Saved' : 'Save'; ?></button></form>
   </div>
 
   <div class="g31">
@@ -257,6 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
       <?php if (!$hasReviewed): ?>
       <form method="POST" class="mb20">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <input type="hidden" name="action" value="post_review">
         <div class="rf-g mb16"><label class="rf-lbl">Rating</label><select class="rf-ctrl" name="rating" required><option value="">Select</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></div>
         <div class="rf-g mb16"><label class="rf-lbl">Title</label><input class="rf-ctrl" name="title" required></div>
@@ -275,6 +280,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             <?php $alreadyVoted = in_array($review['id'], $myVotedReviewIds); ?>
             <?php if (!$alreadyVoted): ?>
             <form method="POST" style="display:inline;margin-top:4px;">
+              <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
               <input type="hidden" name="action" value="mark_helpful">
               <input type="hidden" name="review_id" value="<?php echo (int) $review['id']; ?>">
               <button class="s-btn" type="submit" style="font-size:.75rem;padding:2px 8px;">
@@ -368,6 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
       <?php if (!empty($userItineraries)): ?>
       <div class="dc-sub" style="margin-bottom:6px;">Add to existing itinerary</div>
       <form method="POST" style="margin-bottom:10px;">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <input type="hidden" name="action" value="add_to_itinerary">
         <select class="rf-ctrl" name="itinerary_id" style="margin-bottom:6px;">
           <option value="">Select itinerary...</option>

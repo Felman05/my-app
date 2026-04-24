@@ -90,6 +90,9 @@ try {
 <?php include '../includes/sidebar.php'; ?>
 <main class="d-main">
   <div class="d-topbar"><div><h1 class="d-page-title">Discover Destinations</h1><p class="d-page-sub"><?php echo (int) $total; ?> results found</p></div></div>
+  <?php if (($_GET['msg'] ?? '') === 'not_found'): ?>
+  <div class="alert warn" style="margin-bottom:12px;">That destination wasn't found or is no longer available.</div>
+  <?php endif; ?>
 
   <section class="dc mb20">
     <form method="GET" class="rec-form" style="grid-template-columns:2fr 1fr 1fr 1fr auto;">
@@ -117,7 +120,12 @@ try {
         <div class="dest-rating">&#9733; <?php echo number_format((float) ($dest['avg_rating'] ?? 0), 1); ?></div>
       </a>
     <?php endforeach; ?>
-    <?php if (empty($destinations)): ?><div class="dest-row"><div>No destinations matched your filters.</div></div><?php endif; ?>
+    <?php if (empty($destinations)): ?>
+    <div class="dest-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <div>No destinations matched your filters.</div>
+      <a href="/doon-app/tourist/discover.php" class="s-btn" style="font-size:11px;">Clear all filters</a>
+    </div>
+    <?php endif; ?>
   </section>
 
   <?php if ($totalPages > 1): ?>

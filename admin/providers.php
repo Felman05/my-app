@@ -8,6 +8,7 @@ $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.cs
 
 // Handle approve / reject POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $listingId = (int) ($_POST['listing_id'] ?? 0);
     $action    = $_POST['action'] ?? '';
 
@@ -18,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare(
                 'UPDATE provider_listings
                  SET status = ?, rejection_reason = ?, reviewed_by = ?, reviewed_at = NOW(), updated_at = NOW()
-                 WHERE id = ?'
+                 WHERE id = ? AND status = "pending"'
             );
             $stmt->execute([$newStatus, $reason, $_SESSION['user_id'], $listingId]);
             $desc = $action === 'approve' ? "Approved listing #{$listingId}" : "Rejected listing #{$listingId}: {$reason}";
@@ -65,11 +66,13 @@ try {
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
           <form method="POST" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
             <input type="hidden" name="listing_id" value="<?php echo (int) $p['id']; ?>">
             <input type="hidden" name="action" value="approve">
             <button class="s-btn green" type="submit">Approve</button>
           </form>
           <form method="POST" style="display:inline;" onsubmit="return confirmReject(this);">
+            <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
             <input type="hidden" name="listing_id" value="<?php echo (int) $p['id']; ?>">
             <input type="hidden" name="action" value="reject">
             <input type="hidden" name="rejection_reason" class="reject-reason" value="Does not meet listing standards.">

@@ -27,6 +27,7 @@ if ($itineraryId) {
     // Handle adding a destination stop (supports day ranges)
     $addError = '';
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_stop') {
+        verifyCsrf();
         if ($isExpired) {
             $addError = 'This itinerary has ended and can no longer be modified.';
         } else {
@@ -74,6 +75,7 @@ if ($itineraryId) {
 
     // Handle removing a stop
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'remove_stop') {
+        verifyCsrf();
         if (!$isExpired) {
             $itemId = (int) ($_POST['item_id'] ?? 0);
             if ($itemId) {
@@ -179,6 +181,7 @@ if ($itineraryId) {
             </div>
             <?php if (!$isExpired): ?>
             <form method="POST">
+              <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
               <input type="hidden" name="action" value="remove_stop">
               <input type="hidden" name="item_id" value="<?php echo (int) $stop['id']; ?>">
               <button class="s-btn dark" type="submit" style="font-size:11px;padding:4px 10px;" onclick="return confirm('Remove this stop?');">Remove</button>
@@ -203,6 +206,7 @@ if ($itineraryId) {
       <div class="alert err" style="margin-bottom:8px;"><?php echo escape($addError); ?></div>
       <?php endif; ?>
       <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <input type="hidden" name="action" value="add_stop">
         <div class="rf-g mb12">
           <label class="rf-lbl">Destination</label>
@@ -388,13 +392,18 @@ include '../includes/header.php';
       <?php foreach ($itineraries as $it): ?>
       <a class="itin-row" href="/doon-app/tourist/itinerary.php?id=<?php echo $it['id']; ?>">
         <div class="itin-day">D<?php echo (int) $it['total_days']; ?></div>
-        <div>
+        <div style="flex:1;">
           <div class="itin-name"><?php echo escape($it['title']); ?></div>
           <div class="itin-meta">
             <?php echo formatDate($it['start_date']); ?> to <?php echo formatDate($it['end_date']); ?>
             &nbsp;&bull;&nbsp; <?php echo (int) $it['number_of_people']; ?> people
           </div>
         </div>
+        <?php if (!empty($it['end_date']) && $it['end_date'] < date('Y-m-d')): ?>
+        <span class="pill p-n">Ended</span>
+        <?php else: ?>
+        <span class="pill p-g">Upcoming</span>
+        <?php endif; ?>
       </a>
       <?php endforeach; ?>
       <?php if (empty($itineraries)): ?>

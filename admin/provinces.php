@@ -15,6 +15,7 @@ $allowedMime = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'we
 
 // ── Upload / replace image ────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_id'])) {
+    verifyCsrf();
     $provinceId = (int) ($_POST['upload_id'] ?? 0);
     $province   = $provinceId ? getProvince($pdo, $provinceId) : null;
 
@@ -75,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['upload_id'])) {
 
 // ── Remove image ──────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_id'])) {
+    verifyCsrf();
     $provinceId = (int) ($_POST['remove_id'] ?? 0);
     $province   = $provinceId ? getProvince($pdo, $provinceId) : null;
 
@@ -145,6 +147,7 @@ $err = $_GET['err'] ?? '';
       </p>
 
       <form method="POST" enctype="multipart/form-data" style="margin-bottom:8px;">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <input type="hidden" name="upload_id" value="<?php echo $p['id']; ?>">
         <div style="display:flex;gap:8px;align-items:center;">
           <input type="file" name="province_image" accept="image/jpeg,image/png,image/webp" required
@@ -158,6 +161,7 @@ $err = $_GET['err'] ?? '';
 
       <?php if (!empty($p['landing_image'])): ?>
       <form method="POST" onsubmit="return confirm('Remove image for <?php echo escape($p['name']); ?>?');">
+        <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
         <input type="hidden" name="remove_id" value="<?php echo $p['id']; ?>">
         <button type="submit" class="s-btn" style="font-size:12px;color:var(--i3);">Remove image</button>
       </form>

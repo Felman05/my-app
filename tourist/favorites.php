@@ -10,6 +10,7 @@ $additionalCSS = '<link rel="stylesheet" href="/doon-app/assets/css/dashboard.cs
 
 // Handle remove
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['remove_dest'])) {
+    verifyCsrf();
     $removeId = (int) $_POST['remove_dest'];
     try {
         $stmt = $pdo->prepare('DELETE FROM favorites WHERE user_id = ? AND destination_id = ?');
@@ -69,6 +70,7 @@ try {
         <div style="display:flex;gap:8px;margin-top:10px;">
           <a class="s-btn dark" href="/doon-app/tourist/destination.php?id=<?php echo $d['id']; ?>" style="flex:1;text-align:center;">View</a>
           <form method="POST" style="flex:1;" onsubmit="return confirm('Remove from favorites?');">
+            <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
             <input type="hidden" name="remove_dest" value="<?php echo $d['id']; ?>">
             <button class="s-btn" type="submit" style="width:100%;">Remove</button>
           </form>

@@ -11,6 +11,7 @@ $error   = '';
 
 // ── Create user ───────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
+    verifyCsrf();
     $name     = trim($_POST['name'] ?? '');
     $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -68,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_user'])) {
 
 // ── Toggle active ─────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_user'])) {
+    verifyCsrf();
     $uid = (int) $_POST['toggle_user'];
     try {
         $pdo->prepare('UPDATE users SET is_active = 1 - is_active WHERE id = ?')->execute([$uid]);
@@ -103,6 +105,7 @@ try {
   <section class="dc" id="create-form" style="display:none;margin-bottom:16px;">
     <div class="dc-title" style="margin-bottom:12px;">Create New Account</div>
     <form method="POST" id="userCreateForm">
+      <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
       <input type="hidden" name="create_user" value="1">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="rf-g">
@@ -187,6 +190,7 @@ try {
             <td><?php echo formatDate($user['created_at']); ?></td>
             <td>
               <form method="POST" style="display:inline;" onsubmit="return confirm('Toggle account status?');">
+                <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
                 <input type="hidden" name="toggle_user" value="<?php echo $user['id']; ?>">
                 <button class="s-btn" type="submit" style="font-size:.75rem;padding:2px 8px;">
                   <?php echo $user['is_active'] ? 'Deactivate' : 'Activate'; ?>

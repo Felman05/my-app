@@ -12,11 +12,13 @@ $error   = '';
 
 // ── Toggle active / featured ──────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle'])) {
-    $tid   = (int) ($_POST['dest_id'] ?? 0);
-    $field = $_POST['toggle'] === 'featured' ? 'is_featured' : 'is_active';
-    if ($tid) {
+    verifyCsrf();
+    $tid = (int) ($_POST['dest_id'] ?? 0);
+    $allowedToggles = ['featured' => 'is_featured', 'active' => 'is_active'];
+    $field = $allowedToggles[$_POST['toggle']] ?? null;
+    if ($tid && $field) {
         try {
-            $pdo->prepare("UPDATE destinations SET $field = 1 - $field, updated_at = NOW() WHERE id = ?")->execute([$tid]);
+            $pdo->prepare("UPDATE destinations SET {$field} = 1 - {$field}, updated_at = NOW() WHERE id = ?")->execute([$tid]);
             logAdminActivity($pdo, (int) $_SESSION['user_id'], "toggle_{$field}", 'destination', $tid, "Toggled {$field} on destination #{$tid}");
             $message = 'Updated.';
         } catch (Exception $e) { $error = 'Update failed.'; }
@@ -76,8 +78,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_dest'])) {
 }
 
 // ── Load data ─────────────────────────────────────────────────────────────
+$perPage  = 25;
+$page     = max(1, (int) ($_GET['page'] ?? 1));
+$offset   = ($page - 1) * $perPage;
+
 try {
-    $destinations = $pdo->query(
+    $total = (int) $pdo->query('SELECT COUNT(*) FROM destinations')->fetchColumn();
+    $totalPages = max(1, (int) ceil($total / $perPage));
+
+    $stmt = $pdo->query(
         'SELECT d.id, d.name, d.is_active, d.is_featured,
                 d.short_description, d.description, d.address,
                 d.latitude, d.longitude, d.price_label, d.contact_number,
@@ -86,8 +95,10 @@ try {
          FROM destinations d
          LEFT JOIN provinces p ON d.province_id = p.id
          LEFT JOIN activity_categories ac ON d.category_id = ac.id
-         ORDER BY d.created_at DESC LIMIT 100'
-    )->fetchAll();
+         ORDER BY d.created_at DESC
+         LIMIT ' . $perPage . ' OFFSET ' . $offset
+    );
+    $destinations = $stmt->fetchAll();
 
     $provinces  = $pdo->query('SELECT id, name FROM provinces ORDER BY name')->fetchAll();
     $categories = $pdo->query('SELECT id, name FROM activity_categories ORDER BY name')->fetchAll();
@@ -95,6 +106,8 @@ try {
     $destinations = [];
     $provinces    = [];
     $categories   = [];
+    $total        = 0;
+    $totalPages   = 1;
 }
 
 $gmKey = env('GOOGLE_MAPS_API_KEY', '');
@@ -115,6 +128,7 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
   <section class="dc" id="add-form" style="display:none;margin-bottom:16px;">
     <div class="dc-title" style="margin-bottom:12px;">New Destination</div>
     <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
       <input type="hidden" name="add_dest" value="1">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
         <div class="rf-g"><label class="rf-lbl">Name *</label><input class="rf-ctrl" name="name" required></div>
@@ -176,6 +190,7 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
   </section>
 
   <section class="dc">
+    <div style="margin-bottom:10px;font-size:.85rem;color:var(--i3);"><?php echo number_format($total); ?> destination(s) total &mdash; page <?php echo $page; ?> of <?php echo $totalPages; ?></div>
     <div style="overflow-x:auto;">
       <table class="d-table">
         <thead>
@@ -196,6 +211,7 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
             <td><?php echo escape($d['category_name']); ?></td>
             <td>
               <form method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
                 <input type="hidden" name="dest_id" value="<?php echo $d['id']; ?>">
                 <input type="hidden" name="toggle" value="featured">
                 <button class="s-btn" type="submit" style="padding:2px 8px;font-size:.78rem;">
@@ -205,6 +221,7 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
             </td>
             <td>
               <form method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
                 <input type="hidden" name="dest_id" value="<?php echo $d['id']; ?>">
                 <input type="hidden" name="toggle" value="active">
                 <button class="s-btn <?php echo $d['is_active'] ? '' : 'dark'; ?>" type="submit" style="padding:2px 8px;font-size:.78rem;">
@@ -236,6 +253,13 @@ $gmKey = env('GOOGLE_MAPS_API_KEY', '');
         </tbody>
       </table>
     </div>
+    <?php if ($totalPages > 1): ?>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+      <a class="s-btn <?php echo $i === $page ? 'dark' : ''; ?>" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+      <?php endfor; ?>
+    </div>
+    <?php endif; ?>
   </section>
 </main>
 </div>

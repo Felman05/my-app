@@ -33,6 +33,7 @@ if (!$listing) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $title       = trim($_POST['listing_title'] ?? '');
     $listingType = $_POST['listing_type'] ?? 'other';
     $description = trim($_POST['description'] ?? '');
@@ -62,12 +63,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $finalImages    = array_slice(array_merge($keptImages, $newImages), 0, 5);
             $imagesJson     = !empty($finalImages) ? json_encode($finalImages) : null;
 
+            // Rejected listings are re-submitted for review on save
+            $newStatus = $listing['status'] === 'rejected' ? 'pending' : $listing['status'];
+
             $pdo->prepare(
                 'UPDATE provider_listings
                  SET listing_title=?, listing_type=?, description=?, images=?, price=?,
-                     price_label=?, contact_number=?, capacity=?, availability=?, updated_at=NOW()
+                     price_label=?, contact_number=?, capacity=?, availability=?,
+                     status=?, rejection_reason=NULL, updated_at=NOW()
                  WHERE id=?'
-            )->execute([$title, $listingType, $description, $imagesJson, $price, $priceLabel ?: null, $contact, $capacity, $availability, $listingId]);
+            )->execute([$title, $listingType, $description, $imagesJson, $price, $priceLabel ?: null, $contact, $capacity, $availability, $newStatus, $listingId]);
             header('Location: /doon-app/local/listings.php?updated=1');
             exit;
         } catch (Exception $e) {
@@ -102,6 +107,7 @@ $existingImgs = ($listing['images'] ?? null) ? json_decode($listing['images'], t
 
   <section class="dc" style="max-width:640px;">
     <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
       <div class="rf-g mb16">
         <label class="rf-lbl">Listing Title</label>
         <input class="rf-ctrl" type="text" name="listing_title" required value="<?php echo escape($listing['listing_title']); ?>">

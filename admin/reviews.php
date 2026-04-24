@@ -9,6 +9,7 @@ $message = '';
 
 // Toggle published / unpublished
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
+    verifyCsrf();
     $rid = (int) $_POST['toggle_id'];
     try {
         $pdo->prepare('UPDATE reviews SET is_published = 1 - is_published, updated_at = NOW() WHERE id = ?')->execute([$rid]);
@@ -22,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
 
 // Delete review
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    verifyCsrf();
     $rid = (int) $_POST['delete_id'];
     try {
         $pdo->prepare('DELETE FROM reviews WHERE id = ?')->execute([$rid]);
@@ -116,12 +118,14 @@ $pending   = $total - $published;
           </td>
           <td style="white-space:nowrap;">
             <form method="POST" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
               <input type="hidden" name="toggle_id" value="<?php echo $r['id']; ?>">
               <button class="s-btn" type="submit" style="font-size:.75rem;padding:2px 8px;">
                 <?php echo $r['is_published'] ? 'Unpublish' : 'Publish'; ?>
               </button>
             </form>
             <form method="POST" style="display:inline;" onsubmit="return confirm('Delete this review permanently?');">
+              <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
               <input type="hidden" name="delete_id" value="<?php echo $r['id']; ?>">
               <button class="s-btn dark" type="submit" style="font-size:.75rem;padding:2px 8px;">Delete</button>
             </form>

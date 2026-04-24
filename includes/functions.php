@@ -156,6 +156,30 @@ function logAdminActivity(PDO $pdo, int $adminId, string $action, ?string $model
 }
 
 /**
+ * Generate (or retrieve) the CSRF token for the current session.
+ */
+function csrfToken(): string {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Verify CSRF token on POST requests. Terminates with 403 on failure.
+ */
+function verifyCsrf(): void {
+    if (session_status() === PHP_SESSION_NONE) session_start();
+    $submitted = $_POST['csrf_token'] ?? '';
+    $expected  = $_SESSION['csrf_token'] ?? '';
+    if ($expected === '' || !hash_equals($expected, $submitted)) {
+        http_response_code(403);
+        die('Request validation failed. Please go back and try again.');
+    }
+}
+
+/**
  * Upload images from a multi-file input named "images[]".
  * Stores files under /uploads/$subfolder/, returns web-accessible paths.
  * @param string $subfolder  e.g. 'listings' or 'destinations'
@@ -163,6 +187,8 @@ function logAdminActivity(PDO $pdo, int $adminId, string $action, ?string $model
  * @return string[]          Array of web-accessible paths
  */
 function uploadImages(string $subfolder, int $maxFiles = 10): array {
+    $allowedSubfolders = ['listings', 'destinations', 'provinces'];
+    if (!in_array($subfolder, $allowedSubfolders, true)) return [];
     $paths = [];
     if (empty($_FILES['images']['name'][0])) return $paths;
     $uploadDir = rtrim($_SERVER['DOCUMENT_ROOT'], '/\\') . '/doon-app/uploads/' . $subfolder . '/';

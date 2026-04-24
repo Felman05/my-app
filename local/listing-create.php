@@ -24,6 +24,7 @@ $providerId = $providerProfile['id'];
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verifyCsrf();
     $title        = trim($_POST['listing_title'] ?? '');
     $listingType  = $_POST['listing_type'] ?? 'other';
     $description  = trim($_POST['description'] ?? '');
@@ -75,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <section class="dc" style="max-width:640px;">
     <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
       <div class="rf-g mb16">
         <label class="rf-lbl">Listing Title</label>
         <input class="rf-ctrl" type="text" name="listing_title" required placeholder="e.g., Tagaytay Nature Tour">
