@@ -82,10 +82,11 @@ function verifyPassword($password, $hash) {
  * @param array $user User data from database
  */
 function setUserSession($user) {
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['role']    = $user['role'];
-    $_SESSION['name']    = $user['name'];
-    $_SESSION['email']   = $user['email'];
+    $_SESSION['user_id']             = $user['id'];
+    $_SESSION['role']                = $user['role'];
+    $_SESSION['name']                = $user['name'];
+    $_SESSION['email']               = $user['email'];
+    $_SESSION['must_change_password'] = (int) ($user['must_change_password'] ?? 0);
 }
 
 /**

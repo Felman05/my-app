@@ -132,7 +132,7 @@ if ($itineraryId) {
         }
     }
 
-    $totalDays = max(7, (int) ($itinerary['total_days'] ?? 1));
+    $totalDays = max(1, (int) ($itinerary['total_days'] ?? 1));
 
     include '../includes/header.php';
 ?>

@@ -81,7 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
-          <input class="form-input" type="password" id="password" name="password" required placeholder="********">
+          <div style="position:relative;">
+            <input class="form-input" type="password" id="password" name="password" required placeholder="********" style="padding-right:40px;">
+            <button type="button" onclick="togglePw('password')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;" tabindex="-1">
+              <i class="fa-solid fa-eye" id="password-eye"></i>
+            </button>
+          </div>
         </div>
         <button class="btn-full btn-primary" type="submit">Sign In</button>
       </form>
@@ -94,6 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script src="/doon-app/assets/js/main.js"></script>
+<script>
+function togglePw(id) {
+  var input = document.getElementById(id);
+  var icon  = document.getElementById(id + '-eye');
+  if (input.type === 'password') { input.type = 'text';     icon.classList.replace('fa-eye','fa-eye-slash'); }
+  else                           { input.type = 'password'; icon.classList.replace('fa-eye-slash','fa-eye'); }
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>
 
