@@ -61,6 +61,7 @@ function isActive($page) {
             <a href="/doon-app/admin/destinations.php" class="sb-item <?php echo isActive('destinations.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-umbrella-beach"></i></span>Destinations</a>
             <a href="/doon-app/admin/provinces.php" class="sb-item <?php echo isActive('provinces.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-map-pin"></i></span>Provinces</a>
             <a href="/doon-app/admin/providers.php" class="sb-item <?php echo isActive('providers.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-handshake"></i></span>Providers</a>
+            <a href="/doon-app/admin/provider-map.php" class="sb-item <?php echo isActive('provider-map.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-location-dot"></i></span>Provider Map</a>
             <a href="/doon-app/admin/users.php" class="sb-item <?php echo isActive('users.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-users"></i></span>Users</a>
             <a href="/doon-app/admin/reviews.php" class="sb-item <?php echo isActive('reviews.php'); ?>"><span class="sb-ico"><i class="fa-solid fa-star"></i></span>Reviews</a>
 
