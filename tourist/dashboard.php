@@ -31,7 +31,12 @@ try {
     $stmt->execute([$currentUser['id']]);
     $itineraryCount = $stmt->fetchColumn();
 
-    // Get recent reviews
+    // Get total review count
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM reviews WHERE user_id = ?');
+    $stmt->execute([$currentUser['id']]);
+    $reviewCount = $stmt->fetchColumn();
+
+    // Get recent reviews (display only, capped at 5)
     $stmt = $pdo->prepare(
         'SELECT r.*, d.name as destination_name, d.province_id
          FROM reviews r
@@ -51,6 +56,7 @@ try {
     $profile = null;
     $favCount = 0;
     $itineraryCount = 0;
+    $reviewCount = 0;
     $recentReviews = [];
     $provinces = [];
     $categories = [];
@@ -75,7 +81,7 @@ try {
     <section class="kpi-row c4">
       <article class="kpi"><div class="kpi-lbl">Saved Destinations</div><div class="kpi-val"><?php echo (int) $favCount; ?></div><div class="kpi-sub">Personal picks</div></article>
       <article class="kpi"><div class="kpi-lbl">Itineraries</div><div class="kpi-val"><?php echo (int) $itineraryCount; ?></div><div class="kpi-sub">Active plans</div></article>
-      <article class="kpi"><div class="kpi-lbl">Reviews Posted</div><div class="kpi-val"><?php echo count($recentReviews); ?></div><div class="kpi-sub">Community input</div></article>
+      <article class="kpi"><div class="kpi-lbl">Reviews Posted</div><div class="kpi-val"><?php echo (int) $reviewCount; ?></div><div class="kpi-sub">Community input</div></article>
       <article class="kpi"><div class="kpi-lbl">Profile Completion</div><div class="kpi-val"><?php
         $completion = 0;
         if ($profile) {

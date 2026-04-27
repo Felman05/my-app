@@ -129,7 +129,7 @@ try {
   </div>
   <div class="feat-grid">
     <?php foreach ($featuredDestinations as $destination): ?>
-      <a class="feat-cell" href="/doon-app/tourist/destination.php?id=<?php echo $destination['id']; ?>">
+      <a class="feat-cell" href="<?php echo $currentUser ? '/doon-app/tourist/destination.php?id=' . $destination['id'] : '/doon-app/login.php'; ?>">
         <h3><?php echo escape($destination['name']); ?></h3>
         <p><?php echo escape($destination['province_name']); ?> - <?php echo escape($destination['category_name']); ?></p>
         <p>Rating <?php echo number_format((float) ($destination['avg_rating'] ?? 0), 1); ?> - <?php echo (int) ($destination['total_reviews'] ?? 0); ?> reviews</p>
@@ -165,7 +165,7 @@ try {
               <div class="prov-c-name"><?php echo escape($province['name']); ?></div>
               <div class="prov-c-count"><?php echo $cnt; ?> destination<?php echo $cnt !== 1 ? 's' : ''; ?></div>
             </div>
-            <a class="prov-c-cta" href="/doon-app/tourist/discover.php?province_id=<?php echo $province['id']; ?>">Explore <?php echo escape($province['name']); ?> &rarr;</a>
+            <a class="prov-c-cta" href="<?php echo $currentUser ? '/doon-app/tourist/discover.php?province_id=' . $province['id'] : '/doon-app/register.php'; ?>">Explore <?php echo escape($province['name']); ?> &rarr;</a>
           </div>
         </div>
         <?php endforeach; ?>
@@ -233,7 +233,7 @@ try {
 <footer class="footer">
   <div class="footer-top">
     <div><h3 class="section-title" style="font-size: 28px;">Doon</h3><p>Smart Tourism Platform for CALABARZON.</p></div>
-    <div><h4>Explore</h4><p><a href="/doon-app/tourist/discover.php">Destinations</a></p><p><a href="/doon-app/tourist/map.php">Map</a></p></div>
+    <div><h4>Explore</h4><p><a href="<?php echo $currentUser ? '/doon-app/tourist/discover.php' : '/doon-app/register.php'; ?>">Destinations</a></p><p><a href="<?php echo $currentUser ? '/doon-app/tourist/map.php' : '/doon-app/register.php'; ?>">Map</a></p></div>
     <div><h4>Account</h4><p><a href="/doon-app/login.php">Login</a></p><p><a href="/doon-app/register.php">Register</a></p></div>
   </div>
   <p>� <?php echo date('Y'); ?> Doon. All rights reserved.</p>

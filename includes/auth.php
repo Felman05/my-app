@@ -47,6 +47,15 @@ function requireRole($requiredRole) {
         header('HTTP/1.0 403 Forbidden');
         die('Access denied.');
     }
+
+    // Force password change for local providers on any page, not just dashboard
+    if ($requiredRole === 'local' && !empty($_SESSION['must_change_password'])) {
+        $currentPage = basename($_SERVER['PHP_SELF']);
+        if ($currentPage !== 'dashboard.php') {
+            header('Location: /doon-app/local/dashboard.php');
+            exit;
+        }
+    }
 }
 
 /**
