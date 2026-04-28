@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Doon — Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.profile-header{display:flex;align-items:center;gap:20px;padding:24px;background:#fff;border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:20px;}
+.profile-ava{width:72px;height:72px;border-radius:50%;background:var(--i);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;flex-shrink:0;}
+.profile-info-name{font-family:'Fraunces',serif;font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:2px;}
+.profile-info-meta{font-size:13px;color:var(--i4);}
+.profile-info-gen{display:inline-flex;align-items:center;padding:3px 12px;background:#ededeb;border:1px solid var(--bd2);border-radius:100px;font-size:12px;font-weight:600;color:var(--i2);margin-top:8px;}
+.progress-bar{height:8px;background:var(--bg2);border-radius:100px;overflow:hidden;margin-top:6px;}
+.progress-fill{height:100%;background:var(--i);border-radius:100px;}
+.form-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--i4);}
+.field input,.field select{padding:10px 14px;border:1px solid var(--bd);border-radius:var(--r2);font-size:14px;color:var(--i);font-family:inherit;background:var(--bg);outline:none;}
+.field input:focus,.field select:focus{border-color:var(--i);background:#fff;}
+.field-note{font-size:11px;color:var(--i4);}
+.consent-row{display:flex;align-items:flex-start;gap:10px;padding:14px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r2);}
+.consent-row input[type=checkbox]{margin-top:2px;flex-shrink:0;}
+.consent-row span{font-size:13px;color:var(--i3);line-height:1.6;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.stat-item{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r2);padding:14px 16px;text-align:center;}
+.stat-val{font-family:'Fraunces',serif;font-size:24px;font-weight:700;letter-spacing:-1px;}
+.stat-lbl{font-size:11px;color:var(--i4);margin-top:3px;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">Doon.<sub>Tourist</sub></div>
+  <div class="sb-user"><div class="sb-ava">J</div><div><div class="sb-name">Juan dela Cruz</div><div class="sb-role">Tourist</div></div></div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Main</div>
+    <a class="sb-item" href="04-dashboard.html"><span class="sb-ico">⊞</span>Dashboard</a>
+    <a class="sb-item" href="05-discover.html"><span class="sb-ico">🧭</span>Discover</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-item" href="06-recommendations.html"><span class="sb-ico">✨</span>Recommendations</a>
+    <a class="sb-item" href="07-map.html"><span class="sb-ico">🗺</span>Map</a>
+    <a class="sb-item" href="08-itineraries.html"><span class="sb-ico">📋</span>Itineraries</a>
+    <a class="sb-item" href="09-favorites.html"><span class="sb-ico">♡</span>Favorites</a>
+    <a class="sb-item" href="10-directory.html"><span class="sb-ico">📖</span>Directory</a>
+    <a class="sb-item" href="11-chatbot.html"><span class="sb-ico">💬</span>Chatbot</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-item active" href="12-profile.html"><span class="sb-ico">👤</span>Profile</a>
+    <a class="sb-item" href="#"><span class="sb-ico">→</span>Logout</a>
+  </nav>
+  <div class="sb-foot">Doon Smart Tourism Platform</div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div><h1 class="page-title">My Profile</h1><p class="page-sub">Manage your personal info and travel preferences.</p></div>
+  </div>
+
+  <!-- Profile header -->
+  <div class="profile-header">
+    <div class="profile-ava">J</div>
+    <div style="flex:1;">
+      <div class="profile-info-name">Juan dela Cruz</div>
+      <div class="profile-info-meta">juan@example.com · Tourist since Jan 2025</div>
+      <div class="profile-info-gen">Millennial · Born 1990</div>
+    </div>
+    <div style="text-align:right;min-width:180px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--i4);margin-bottom:4px;">Profile Completion</div>
+      <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:700;letter-spacing:-1px;">75%</div>
+      <div class="progress-bar" style="margin-top:4px;"><div class="progress-fill" style="width:75%;"></div></div>
+    </div>
+  </div>
+
+  <!-- Activity stats -->
+  <div class="stats-row mb20">
+    <div class="stat-item"><div class="stat-val">4</div><div class="stat-lbl">Saved Places</div></div>
+    <div class="stat-item"><div class="stat-val">2</div><div class="stat-lbl">Itineraries</div></div>
+    <div class="stat-item"><div class="stat-val">3</div><div class="stat-lbl">Reviews</div></div>
+    <div class="stat-item"><div class="stat-val">12</div><div class="stat-lbl">Places Visited</div></div>
+  </div>
+
+  <div class="g2">
+    <!-- Edit profile form -->
+    <div class="card">
+      <div class="card-title">Travel Preferences</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="field">
+          <label>Preferred Budget</label>
+          <select><option>Budget</option><option>Mid Range</option><option>Luxury</option></select>
+        </div>
+        <div class="field">
+          <label>Travel Style</label>
+          <select><option>Solo</option><option>Couple</option><option>Family</option><option>Group</option></select>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <select><option>Month</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select>
+            <select><option>Day</option></select>
+            <select><option>Year</option><option>1990</option><option>1991</option><option>1992</option></select>
+          </div>
+          <div class="field-note">Used to personalize your experience based on your generation.</div>
+        </div>
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" value="Juan dela Cruz">
+        </div>
+        <button class="btn-primary" style="align-self:flex-start;">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- Privacy & account -->
+    <div class="col-stack">
+      <div class="card">
+        <div class="card-title">Privacy Settings</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="consent-row">
+            <input type="checkbox" checked>
+            <span>Allow Doon to use my data for personalized recommendations (R.A. 10173 — Data Privacy Act)</span>
+          </div>
+          <div class="consent-row">
+            <input type="checkbox">
+            <span>Share my location for nearby destination suggestions</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Account</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="field"><label>Email</label><input type="email" value="juan@example.com"></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-outline">Change Password</button>
+            <button class="btn-outline" style="color:#dc2626;border-color:#fecaca;">Delete Account</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

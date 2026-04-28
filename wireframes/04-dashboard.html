@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Doon — Tourist Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.wx-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.wx-cell{text-align:center;padding:12px 8px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);}
+.wx-ico{font-size:22px;display:block;margin-bottom:4px;}
+.wx-temp{font-family:'Fraunces',serif;font-size:20px;font-weight:700;letter-spacing:-1px;}
+.wx-loc{font-size:11px;font-weight:600;color:var(--i2);margin-top:2px;}
+.wx-cond{font-size:10px;color:var(--i4);margin-top:1px;}
+.rec-form{display:grid;grid-template-columns:repeat(5,1fr) auto;gap:10px;align-items:end;}
+.map-box{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);height:160px;display:flex;align-items:center;justify-content:center;color:var(--i4);font-size:13px;}
+.chat-msg{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r2);padding:12px 14px;font-size:13px;color:var(--i2);line-height:1.6;margin-bottom:12px;}
+.chat-bar{display:flex;gap:8px;}
+.chat-in{flex:1;padding:8px 12px;border:1px solid var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;background:var(--bg);outline:none;}
+.chat-snd{padding:8px 16px;background:var(--i);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">Doon.<sub>Tourist</sub></div>
+  <div class="sb-user"><div class="sb-ava">J</div><div><div class="sb-name">Juan dela Cruz</div><div class="sb-role">Tourist</div></div></div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Main</div>
+    <a class="sb-item active" href="04-dashboard.html"><span class="sb-ico">⊞</span>Dashboard</a>
+    <a class="sb-item" href="05-discover.html"><span class="sb-ico">🧭</span>Discover</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-item" href="06-recommendations.html"><span class="sb-ico">✨</span>Recommendations</a>
+    <a class="sb-item" href="07-map.html"><span class="sb-ico">🗺</span>Map</a>
+    <a class="sb-item" href="08-itineraries.html"><span class="sb-ico">📋</span>Itineraries</a>
+    <a class="sb-item" href="09-favorites.html"><span class="sb-ico">♡</span>Favorites</a>
+    <a class="sb-item" href="10-directory.html"><span class="sb-ico">📖</span>Directory</a>
+    <a class="sb-item" href="11-chatbot.html"><span class="sb-ico">💬</span>Chatbot</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-item" href="12-profile.html"><span class="sb-ico">👤</span>Profile</a>
+    <a class="sb-item" href="#"><span class="sb-ico">→</span>Logout</a>
+  </nav>
+  <div class="sb-foot">Doon Smart Tourism Platform</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div><h1 class="page-title">Tourist Dashboard</h1><p class="page-sub">Welcome back, Juan. Plan your next CALABARZON adventure.</p></div>
+    <div class="ava-btn">J</div>
+  </div>
+
+  <div class="kpi-row c4">
+    <div class="kpi"><div class="kpi-lbl">Saved Places</div><div class="kpi-val">4</div><div class="kpi-sub">Personal picks</div></div>
+    <div class="kpi"><div class="kpi-lbl">Itineraries</div><div class="kpi-val">2</div><div class="kpi-sub">Active plans</div></div>
+    <div class="kpi"><div class="kpi-lbl">Reviews Posted</div><div class="kpi-val">3</div><div class="kpi-sub">Community input</div></div>
+    <div class="kpi"><div class="kpi-lbl">Profile</div><div class="kpi-val">75%</div><div class="kpi-sub"><a href="12-profile.html">Complete for better recs</a></div></div>
+  </div>
+
+  <div class="card mb20">
+    <div class="card-title">Live Weather — CALABARZON</div>
+    <div class="wx-grid">
+      <div class="wx-cell"><span class="wx-ico">⛅</span><div class="wx-temp">31°C</div><div class="wx-loc">Batangas</div><div class="wx-cond">Partly Cloudy</div></div>
+      <div class="wx-cell"><span class="wx-ico">🌧️</span><div class="wx-temp">27°C</div><div class="wx-loc">Laguna</div><div class="wx-cond">Rainy</div></div>
+      <div class="wx-cell"><span class="wx-ico">☀️</span><div class="wx-temp">33°C</div><div class="wx-loc">Cavite</div><div class="wx-cond">Sunny</div></div>
+      <div class="wx-cell"><span class="wx-ico">⛅</span><div class="wx-temp">29°C</div><div class="wx-loc">Rizal</div><div class="wx-cond">Partly Cloudy</div></div>
+      <div class="wx-cell"><span class="wx-ico">☀️</span><div class="wx-temp">28°C</div><div class="wx-loc">Quezon</div><div class="wx-cond">Sunny</div></div>
+    </div>
+  </div>
+
+  <div class="card mb20">
+    <div class="card-title">AI Activity Finder</div>
+    <div class="rec-form">
+      <div class="rf-g"><label class="rf-lbl">Budget</label><select class="rf-ctrl"><option>Any</option><option>Free</option><option>Budget</option><option>Mid Range</option><option>Luxury</option></select></div>
+      <div class="rf-g"><label class="rf-lbl">Theme</label><select class="rf-ctrl"><option>Any</option><option>Beach</option><option>Nature</option><option>Cultural</option><option>Adventure</option><option>Hiking</option></select></div>
+      <div class="rf-g"><label class="rf-lbl">People</label><select class="rf-ctrl"><option>Solo</option><option>2</option><option>3–5</option><option>6+</option></select></div>
+      <div class="rf-g"><label class="rf-lbl">Duration</label><select class="rf-ctrl"><option>Day Trip</option><option>2 Days</option><option>3–5 Days</option><option>Week+</option></select></div>
+      <div class="rf-g"><label class="rf-lbl">Province</label><select class="rf-ctrl"><option>All</option><option>Batangas</option><option>Laguna</option><option>Cavite</option><option>Rizal</option><option>Quezon</option></select></div>
+      <button class="rf-go">Find →</button>
+    </div>
+  </div>
+
+  <div class="g31">
+    <div class="card">
+      <div class="card-title">Recommended for You <a href="06-recommendations.html">See all →</a></div>
+      <div class="dest-list">
+        <div class="dest-row"><div class="dest-ico">D</div><div><div class="dest-name">Masasa Beach, Tingloy</div><div class="dest-meta">Batangas · Beach · ₱150 ferry</div></div><div class="dest-rating">4.9 ★</div></div>
+        <div class="dest-row"><div class="dest-ico">D</div><div><div class="dest-name">Taal Volcano Viewpoint</div><div class="dest-meta">Batangas · Nature · ₱500–800</div></div><div class="dest-rating">4.8 ★</div></div>
+        <div class="dest-row"><div class="dest-ico">D</div><div><div class="dest-name">Pagsanjan Falls + Lagoon</div><div class="dest-meta">Laguna · Nature · ₱300</div></div><div class="dest-rating">4.7 ★</div></div>
+        <div class="dest-row"><div class="dest-ico">D</div><div><div class="dest-name">Corregidor Island Tour</div><div class="dest-meta">Cavite · Cultural · ₱1,200</div></div><div class="dest-rating">4.8 ★</div></div>
+      </div>
+    </div>
+    <div class="col-stack">
+      <div class="card">
+        <div class="card-title">Map Explorer <a href="07-map.html">Explore →</a></div>
+        <div class="map-box">[ CALABARZON Map — 287 Pins ]</div>
+      </div>
+      <div class="card">
+        <div class="card-title">AI Travel Chatbot <a href="11-chatbot.html">Open →</a></div>
+        <div class="chat-msg">Hi Juan! Best pick this weekend: <strong>Masasa Beach</strong> 🏖️ — ferry is only ₱150 each way!</div>
+        <div class="chat-bar">
+          <input class="chat-in" type="text" placeholder="Ask about destinations...">
+          <button class="chat-snd">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

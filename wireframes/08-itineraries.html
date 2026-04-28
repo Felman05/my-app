@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Doon — Itineraries</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.itin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.itin-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:18px;}
+.itin-card-name{font-family:'Fraunces',serif;font-size:17px;font-weight:700;letter-spacing:-.3px;margin-bottom:6px;}
+.itin-card-meta{font-size:12px;color:var(--i4);margin-bottom:12px;line-height:1.6;}
+.itin-card-stops{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--i4);margin-bottom:8px;}
+.itin-stop{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bg2);}
+.itin-stop:last-child{border-bottom:none;}
+.itin-stop-day{min-width:44px;font-size:10px;font-weight:700;color:var(--i4);text-transform:uppercase;letter-spacing:.4px;}
+.itin-stop-name{font-size:12px;color:var(--i2);}
+.day-plan{display:grid;grid-template-columns:1fr 2fr;gap:16px;}
+.day-tabs{display:flex;flex-direction:column;gap:4px;}
+.day-tab{padding:8px 12px;border-radius:var(--r);font-size:13px;cursor:pointer;border:1px solid var(--bd);background:var(--bg);color:var(--i3);}
+.day-tab.active{background:#ededeb;color:var(--i);font-weight:600;border-color:#ededeb;}
+.day-stops{display:flex;flex-direction:column;gap:8px;}
+.day-stop-item{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:flex-start;gap:12px;}
+.day-stop-num{font-size:11px;font-weight:700;color:var(--i4);min-width:22px;}
+.day-stop-name{font-size:13px;font-weight:600;color:var(--i);margin-bottom:2px;}
+.day-stop-meta{font-size:11px;color:var(--i4);}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">Doon.<sub>Tourist</sub></div>
+  <div class="sb-user"><div class="sb-ava">J</div><div><div class="sb-name">Juan dela Cruz</div><div class="sb-role">Tourist</div></div></div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Main</div>
+    <a class="sb-item" href="04-dashboard.html"><span class="sb-ico">⊞</span>Dashboard</a>
+    <a class="sb-item" href="05-discover.html"><span class="sb-ico">🧭</span>Discover</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-item" href="06-recommendations.html"><span class="sb-ico">✨</span>Recommendations</a>
+    <a class="sb-item" href="07-map.html"><span class="sb-ico">🗺</span>Map</a>
+    <a class="sb-item active" href="08-itineraries.html"><span class="sb-ico">📋</span>Itineraries</a>
+    <a class="sb-item" href="09-favorites.html"><span class="sb-ico">♡</span>Favorites</a>
+    <a class="sb-item" href="10-directory.html"><span class="sb-ico">📖</span>Directory</a>
+    <a class="sb-item" href="11-chatbot.html"><span class="sb-ico">💬</span>Chatbot</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-item" href="12-profile.html"><span class="sb-ico">👤</span>Profile</a>
+    <a class="sb-item" href="#"><span class="sb-ico">→</span>Logout</a>
+  </nav>
+  <div class="sb-foot">Doon Smart Tourism Platform</div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div><h1 class="page-title">Itineraries</h1><p class="page-sub">Your trip plans (2 active).</p></div>
+    <a class="btn-primary" href="#">+ New Itinerary</a>
+  </div>
+
+  <div class="itin-grid">
+    <div class="itin-card" style="border-color:var(--i);border-width:2px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span class="badge badge-success">Active</span><span class="btn-sm">View →</span></div>
+      <div class="itin-card-name">Batangas Beach Weekend</div>
+      <div class="itin-card-meta">May 3–4, 2025 · 2 days · 3 stops<br>Batangas Province</div>
+      <div class="itin-card-stops">Stops</div>
+      <div class="itin-stop"><div class="itin-stop-day">Day 1</div><div class="itin-stop-name">Masasa Beach, Tingloy</div></div>
+      <div class="itin-stop"><div class="itin-stop-day">Day 1</div><div class="itin-stop-name">Fortune Island</div></div>
+      <div class="itin-stop"><div class="itin-stop-day">Day 2</div><div class="itin-stop-name">Taal Volcano Viewpoint</div></div>
+    </div>
+    <div class="itin-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span class="badge badge-muted">Draft</span><span class="btn-sm">View →</span></div>
+      <div class="itin-card-name">Laguna–Rizal Day Tour</div>
+      <div class="itin-card-meta">Unscheduled · 1 day · 2 stops<br>Laguna &amp; Rizal</div>
+      <div class="itin-card-stops">Stops</div>
+      <div class="itin-stop"><div class="itin-stop-day">Day 1</div><div class="itin-stop-name">Pagsanjan Falls</div></div>
+      <div class="itin-stop"><div class="itin-stop-day">Day 1</div><div class="itin-stop-name">Pinto Art Museum</div></div>
+    </div>
+    <div class="itin-card" style="border-style:dashed;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;">
+      <div style="font-size:28px;margin-bottom:8px;opacity:.3;">+</div>
+      <div style="font-size:13px;color:var(--i4);">Create new itinerary</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Batangas Beach Weekend — Day View</div>
+    <div class="day-plan">
+      <div class="day-tabs">
+        <div class="day-tab active">Day 1 — May 3</div>
+        <div class="day-tab">Day 2 — May 4</div>
+        <div style="margin-top:12px;border-top:1px solid var(--bd);padding-top:12px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--i4);margin-bottom:8px;">Add Stop</div>
+          <select class="rf-ctrl" style="width:100%;margin-bottom:8px;"><option>Select destination...</option><option>Fortune Island</option><option>Matabungkay Beach</option></select>
+          <select class="rf-ctrl" style="width:100%;margin-bottom:8px;"><option>Day 1</option><option>Day 2</option></select>
+          <button class="rf-go" style="width:100%;">Add →</button>
+        </div>
+      </div>
+      <div class="day-stops">
+        <div class="day-stop-item">
+          <div class="day-stop-num">1</div>
+          <div><div class="day-stop-name">Masasa Beach, Tingloy</div><div class="day-stop-meta">Batangas · Beach &amp; Water · 🚢 Boat</div></div>
+        </div>
+        <div class="day-stop-item">
+          <div class="day-stop-num">2</div>
+          <div><div class="day-stop-name">Fortune Island</div><div class="day-stop-meta">Batangas · Beach &amp; Water · 🚢 Boat</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

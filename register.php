@@ -19,9 +19,12 @@ if (isAuthenticated()) {
 
 $errors = [];
 $formData = [
-    'name' => '',
-    'email' => '',
-    'role' => 'tourist'
+    'name'      => '',
+    'email'     => '',
+    'role'      => 'tourist',
+    'dob_month' => '',
+    'dob_day'   => '',
+    'dob_year'  => '',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -31,6 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $confirmPassword = $_POST['confirm_password'] ?? '';
     $role = $_POST['role'] ?? 'tourist';
 
+    $dobMonth = (int) ($_POST['dob_month'] ?? 0);
+    $dobDay   = (int) ($_POST['dob_day']   ?? 0);
+    $dobYear  = (int) ($_POST['dob_year']  ?? 0);
+    $dob = null;
+
     // Validate
     if (empty($name)) $errors[] = 'Name is required.';
     if (empty($email)) $errors[] = 'Email is required.';
@@ -38,6 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($password)) $errors[] = 'Password is required.';
     if ($password !== $confirmPassword) $errors[] = 'Passwords do not match.';
     if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters.';
+    if (!$dobYear || !$dobMonth || !$dobDay || !checkdate($dobMonth, $dobDay, $dobYear)) {
+        $errors[] = 'Please enter a valid date of birth.';
+    } else {
+        $dob = sprintf('%04d-%02d-%02d', $dobYear, $dobMonth, $dobDay);
+        $age = calcAge($dob);
+        if ($age < 13) $errors[] = 'You must be at least 13 years old to register.';
+        if ($dobYear < 1900) $errors[] = 'Please enter a valid birth year.';
+    }
     $role = 'tourist'; // Public registration is tourist-only; providers are created by admin
 
     // Check if email exists
@@ -61,19 +77,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Insert user
             $hashedPassword = hashPassword($password);
             $stmt = $pdo->prepare(
-                'INSERT INTO users (name, email, password, role, is_active, data_privacy_consent, created_at)
-                 VALUES (?, ?, ?, ?, 1, 1, NOW())'
+                'INSERT INTO users (name, date_of_birth, email, password, role, is_active, data_privacy_consent, created_at)
+                 VALUES (?, ?, ?, ?, ?, 1, 1, NOW())'
             );
-            $stmt->execute([$name, $email, $hashedPassword, $role]);
+            $stmt->execute([$name, $dob, $email, $hashedPassword, $role]);
             $userId = $pdo->lastInsertId();
 
-            // If tourist, create tourist profile
+            // If tourist, create tourist profile with generational_profile derived from DOB
             if ($role === 'tourist') {
+                $genProfile = dobToGenerationalProfile($dob) ?? 'millennial';
                 $stmt = $pdo->prepare(
                     'INSERT INTO tourist_profiles (user_id, generational_profile, preferred_budget, travel_style, location_tracking_consent, created_at)
                      VALUES (?, ?, ?, ?, 0, NOW())'
                 );
-                $stmt->execute([$userId, 'millennial', 'mid_range', 'solo']);
+                $stmt->execute([$userId, $genProfile, 'mid_range', 'solo']);
             }
 
             $pdo->commit();
@@ -94,9 +111,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $formData = [
-        'name'  => $name,
-        'email' => $email,
-        'role'  => 'tourist',
+        'name'      => $name,
+        'email'     => $email,
+        'role'      => 'tourist',
+        'dob_month' => $dobMonth,
+        'dob_day'   => $dobDay,
+        'dob_year'  => $dobYear,
     ];
 }
 ?>
@@ -138,6 +158,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="form-group">
           <label class="form-label" for="email">Email</label>
           <input class="form-input" type="email" id="email" name="email" value="<?php echo escape($formData['email']); ?>" required placeholder="you@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <div class="form-row" style="gap:8px;">
+            <select class="form-input" name="dob_month" required>
+              <option value="">Month</option>
+              <?php
+              $months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+              foreach ($months as $i => $m):
+                $val = $i + 1;
+                $sel = (int)$formData['dob_month'] === $val ? 'selected' : '';
+              ?>
+              <option value="<?php echo $val; ?>" <?php echo $sel; ?>><?php echo $m; ?></option>
+              <?php endforeach; ?>
+            </select>
+            <select class="form-input" name="dob_day" required>
+              <option value="">Day</option>
+              <?php for ($d = 1; $d <= 31; $d++): ?>
+              <option value="<?php echo $d; ?>" <?php echo (int)$formData['dob_day'] === $d ? 'selected' : ''; ?>><?php echo $d; ?></option>
+              <?php endfor; ?>
+            </select>
+            <input class="form-input" type="number" name="dob_year" placeholder="Year" min="1920" max="<?php echo date('Y') - 13; ?>" value="<?php echo escape($formData['dob_year']); ?>" required style="min-width:80px;">
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">

@@ -98,6 +98,7 @@ try {
       <section class="dc">
         <div class="dc-head"><div><div class="dc-title">Quick Recommendation</div><div class="dc-sub">Get a filtered shortlist</div></div></div>
         <form class="rec-form" action="/doon-app/tourist/recommend.php" method="POST">
+          <input type="hidden" name="csrf_token" value="<?php echo escape(csrfToken()); ?>">
           <div class="rf-g"><label class="rf-lbl">Budget</label><select class="rf-ctrl" name="budget"><option value="">Any</option><option value="free">Free</option><option value="budget">Budget</option><option value="mid_range">Mid range</option><option value="luxury">Luxury</option></select></div>
           <div class="rf-g"><label class="rf-lbl">Province</label><select class="rf-ctrl" name="province_id">
             <option value="">Any</option>

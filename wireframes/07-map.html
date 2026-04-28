@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Doon — Map Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+.map-container{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);height:480px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.map-placeholder-text{font-size:14px;color:var(--i4);text-align:center;}
+.map-pin{position:absolute;display:flex;flex-direction:column;align-items:center;}
+.map-pin-dot{width:12px;height:12px;border-radius:50%;background:var(--i);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+.map-pin-lbl{font-size:10px;font-weight:600;color:var(--i2);margin-top:2px;background:rgba(255,255,255,.9);padding:1px 6px;border-radius:4px;white-space:nowrap;}
+.controls{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.mode-select{padding:7px 12px;border:1px solid var(--bd);border-radius:var(--r);font-size:13px;font-family:inherit;background:var(--bg);outline:none;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sb-logo">Doon.<sub>Tourist</sub></div>
+  <div class="sb-user"><div class="sb-ava">J</div><div><div class="sb-name">Juan dela Cruz</div><div class="sb-role">Tourist</div></div></div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Main</div>
+    <a class="sb-item" href="04-dashboard.html"><span class="sb-ico">⊞</span>Dashboard</a>
+    <a class="sb-item" href="05-discover.html"><span class="sb-ico">🧭</span>Discover</a>
+    <div class="sb-sec">Tools</div>
+    <a class="sb-item" href="06-recommendations.html"><span class="sb-ico">✨</span>Recommendations</a>
+    <a class="sb-item active" href="07-map.html"><span class="sb-ico">🗺</span>Map</a>
+    <a class="sb-item" href="08-itineraries.html"><span class="sb-ico">📋</span>Itineraries</a>
+    <a class="sb-item" href="09-favorites.html"><span class="sb-ico">♡</span>Favorites</a>
+    <a class="sb-item" href="10-directory.html"><span class="sb-ico">📖</span>Directory</a>
+    <a class="sb-item" href="11-chatbot.html"><span class="sb-ico">💬</span>Chatbot</a>
+    <div class="sb-sec">Account</div>
+    <a class="sb-item" href="12-profile.html"><span class="sb-ico">👤</span>Profile</a>
+    <a class="sb-item" href="#"><span class="sb-ico">→</span>Logout</a>
+  </nav>
+  <div class="sb-foot">Doon Smart Tourism Platform</div>
+</aside>
+<main class="main">
+  <div class="topbar">
+    <div><h1 class="page-title">Map Explorer</h1><p class="page-sub">Browse destinations geographically across CALABARZON.</p></div>
+  </div>
+
+  <div class="card mb20">
+    <div class="controls">
+      <button class="btn-outline">📍 Show My Location</button>
+      <select class="mode-select"><option>🚗 Driving</option><option>🚶 Walking</option><option>🚲 Cycling</option></select>
+      <button class="btn-outline" style="opacity:.45;cursor:not-allowed;">Plan Route</button>
+      <span style="font-size:12px;color:var(--i4);">💡 Select 2+ destinations below to plan a route</span>
+    </div>
+    <div class="map-container">
+      <!-- Simulated province pins on a blank map -->
+      <div class="map-pin" style="left:18%;top:58%;"><div class="map-pin-dot"></div><div class="map-pin-lbl">Batangas</div></div>
+      <div class="map-pin" style="left:52%;top:32%;"><div class="map-pin-dot"></div><div class="map-pin-lbl">Laguna</div></div>
+      <div class="map-pin" style="left:35%;top:72%;"><div class="map-pin-dot"></div><div class="map-pin-lbl">Cavite</div></div>
+      <div class="map-pin" style="left:68%;top:44%;"><div class="map-pin-dot"></div><div class="map-pin-lbl">Rizal</div></div>
+      <div class="map-pin" style="left:82%;top:68%;"><div class="map-pin-dot"></div><div class="map-pin-lbl">Quezon</div></div>
+      <div class="map-placeholder-text">[ Google Maps — CALABARZON Region — 287 Active Pins ]</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Select destinations for route planning</div>
+    <div class="dest-list">
+      <label class="dest-row" style="cursor:pointer;"><input type="checkbox" style="margin-right:4px;"><div><div class="dest-name">Masasa Beach, Tingloy</div><div class="dest-meta">Batangas · Beach &amp; Water · 13.7167°N 120.8333°E</div></div><a class="btn-sm" href="#" onclick="return false;" style="margin-left:auto;">View</a></label>
+      <label class="dest-row" style="cursor:pointer;"><input type="checkbox" style="margin-right:4px;"><div><div class="dest-name">Taal Volcano &amp; Taal Lake</div><div class="dest-meta">Batangas · Nature · 14.0153°N 120.9991°E</div></div><a class="btn-sm" href="#" onclick="return false;" style="margin-left:auto;">View</a></label>
+      <label class="dest-row" style="cursor:pointer;"><input type="checkbox" style="margin-right:4px;"><div><div class="dest-name">Pagsanjan Falls &amp; Gorge</div><div class="dest-meta">Laguna · Nature · 14.2667°N 121.4500°E</div></div><a class="btn-sm" href="#" onclick="return false;" style="margin-left:auto;">View</a></label>
+      <label class="dest-row" style="cursor:pointer;"><input type="checkbox" style="margin-right:4px;"><div><div class="dest-name">Corregidor Island Tour</div><div class="dest-meta">Cavite · Cultural · 14.3853°N 120.5836°E</div></div><a class="btn-sm" href="#" onclick="return false;" style="margin-left:auto;">View</a></label>
+      <label class="dest-row" style="cursor:pointer;"><input type="checkbox" style="margin-right:4px;"><div><div class="dest-name">Pinto Art Museum, Antipolo</div><div class="dest-meta">Rizal · Cultural · 14.5945°N 121.1648°E</div></div><a class="btn-sm" href="#" onclick="return false;" style="margin-left:auto;">View</a></label>
+    </div>
+  </div>
+</main>
+</body>
+</html>

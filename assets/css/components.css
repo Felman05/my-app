@@ -99,6 +99,11 @@
 .btn-no { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--r); background: #fef0ee; border: 1px solid #f0b8b0; color: #8a2a1a; transition: all .1s; }
 .btn-no:hover { background: #8a2a1a; color: var(--wh); border-color: #8a2a1a; }
 
+@media (max-width: 768px) {
+  .wx-grid { grid-template-columns: repeat(3,1fr); }
+  .rf-go { grid-column: 1 / -1; }
+}
+
 .dest-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 16px; }
 .dest-card { background: var(--wh); border: 1px solid var(--bd); border-radius: var(--r2); overflow: hidden; transition: box-shadow .15s,transform .12s; }
 .dest-card:hover { box-shadow: var(--s2); transform: translateY(-2px); }

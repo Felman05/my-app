@@ -201,3 +201,20 @@ function formatDate(date) {
 
   startAuto();
 }());
+
+// ── Mobile More Sheet ────────────────────────────────────────────
+(function () {
+  var btn     = document.getElementById('mob-more-btn');
+  var overlay = document.getElementById('mob-more-overlay');
+  if (!btn || !overlay) return;
+  btn.addEventListener('click', function () {
+    overlay.classList.add('open');
+    btn.classList.add('active');
+  });
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) {
+      overlay.classList.remove('open');
+      btn.classList.remove('active');
+    }
+  });
+}());

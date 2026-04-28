@@ -25,10 +25,11 @@ function getCurrentUser() {
         return null;
     }
     return [
-        'id'   => $_SESSION['user_id'],
-        'role' => $_SESSION['role'] ?? 'tourist',
-        'name' => $_SESSION['name'] ?? '',
-        'email' => $_SESSION['email'] ?? ''
+        'id'            => $_SESSION['user_id'],
+        'role'          => $_SESSION['role'] ?? 'tourist',
+        'name'          => $_SESSION['name'] ?? '',
+        'email'         => $_SESSION['email'] ?? '',
+        'date_of_birth' => $_SESSION['date_of_birth'] ?? null,
     ];
 }
 
@@ -91,11 +92,27 @@ function verifyPassword($password, $hash) {
  * @param array $user User data from database
  */
 function setUserSession($user) {
-    $_SESSION['user_id']             = $user['id'];
-    $_SESSION['role']                = $user['role'];
-    $_SESSION['name']                = $user['name'];
-    $_SESSION['email']               = $user['email'];
+    $_SESSION['user_id']              = $user['id'];
+    $_SESSION['role']                 = $user['role'];
+    $_SESSION['name']                 = $user['name'];
+    $_SESSION['email']                = $user['email'];
+    $_SESSION['date_of_birth']        = $user['date_of_birth'] ?? null;
     $_SESSION['must_change_password'] = (int) ($user['must_change_password'] ?? 0);
+}
+
+function dobToGenerationalProfile($dob) {
+    if (!$dob) return null;
+    $year = (int) date('Y', strtotime($dob));
+    if ($year >= 1997) return 'gen_z';
+    if ($year >= 1981) return 'millennial';
+    if ($year >= 1965) return 'gen_x';
+    if ($year >= 1946) return 'boomer';
+    return null;
+}
+
+function calcAge($dob) {
+    if (!$dob) return null;
+    return (int) date_diff(date_create($dob), date_create('today'))->y;
 }
 
 /**

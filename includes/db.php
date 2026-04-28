@@ -1,13 +1,15 @@
 <?php
 /**
  * Database Connection
- * PDO connection to doon_db MariaDB
+ * PDO connection — credentials loaded from .env
  */
 
-$host = '127.0.0.1';
-$db   = 'doon_db';
-$user = 'root';
-$pass = '';
+require_once __DIR__ . '/env.php';
+
+$host    = env('DB_HOST', '127.0.0.1');
+$db      = env('DB_NAME', 'doon_db');
+$user    = env('DB_USER', 'root');
+$pass    = env('DB_PASS', '');
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

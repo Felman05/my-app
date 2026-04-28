@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doon — Landing Page</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --i:#1a1a18;--i2:#3a3a36;--i3:#6b6b64;--i4:#9b9b92;
+    --bd:#e4e4de;--bd2:#cecec6;--bg:#f8f7f4;--bg2:#f1f0ec;
+    --wh:#ffffff;--r:6px;--r2:10px;--r3:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--i);}
+  a{color:inherit;text-decoration:none;}
+
+  /* Navbar */
+  nav{position:fixed;top:0;left:0;right:0;z-index:300;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 52px;background:rgba(248,247,244,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--bd);}
+  .nlogo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;letter-spacing:-.5px;}
+  .nlogo b{color:var(--i);}
+  .nctr{display:flex;gap:2px;}
+  .nlnk{font-size:13px;color:var(--i3);padding:6px 14px;border-radius:100px;}
+  .nbtn-o{font-size:13px;font-weight:500;color:var(--i2);padding:7px 18px;border:1px solid var(--bd2);border-radius:100px;background:transparent;}
+  .nbtn-s{font-size:13px;font-weight:600;color:#fff;padding:7px 20px;border:none;border-radius:100px;background:var(--i);}
+  .nrt{display:flex;gap:8px;align-items:center;}
+
+  /* Hero */
+  .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:110px 52px 80px;text-align:center;position:relative;}
+  .hero-tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--i2);background:#ededeb;border:1px solid #ccccca;border-radius:100px;padding:5px 14px 5px 8px;margin-bottom:28px;}
+  .hero-tag-dot{width:18px;height:18px;border-radius:50%;background:var(--i);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;}
+  .hero-h1{font-family:'Fraunces',serif;font-size:80px;font-weight:300;line-height:.95;letter-spacing:-4px;color:var(--i);max-width:820px;margin-bottom:22px;}
+  .hero-h1 em{font-style:italic;font-weight:700;}
+  .hero-sub{font-size:16px;font-weight:300;line-height:1.7;color:var(--i3);max-width:480px;margin-bottom:36px;}
+  .hero-btns{display:flex;gap:10px;align-items:center;margin-bottom:48px;}
+  .hbp{font-size:14px;font-weight:600;padding:12px 28px;border-radius:100px;background:var(--i);color:#fff;display:inline-block;}
+  .hbs{font-size:14px;font-weight:500;padding:12px 24px;border-radius:100px;border:1px solid var(--bd2);background:transparent;color:var(--i2);display:inline-block;}
+  .hero-provs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+  .ptag{font-size:12px;color:var(--i3);padding:5px 14px;border-radius:100px;border:1px solid var(--bd);background:#fff;}
+
+  /* Stats strip */
+  .strip{border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);background:#fff;display:grid;grid-template-columns:repeat(4,1fr);}
+  .strip-item{padding:30px 36px;border-right:1px solid var(--bd);}
+  .strip-item:last-child{border-right:none;}
+  .strip-num{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-2px;color:var(--i);line-height:1;margin-bottom:4px;}
+  .strip-lbl{font-size:13px;color:var(--i3);}
+
+  /* Section */
+  .section{padding:80px 52px;max-width:1200px;margin:0 auto;}
+  .section-head{text-align:center;margin-bottom:48px;}
+  .section-kicker{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--i4);margin-bottom:8px;}
+  .section-title{font-family:'Fraunces',serif;font-size:40px;font-weight:700;letter-spacing:-1.5px;color:var(--i);margin-bottom:10px;}
+  .section-sub{font-size:15px;color:var(--i3);font-weight:300;max-width:500px;margin:0 auto;}
+
+  /* Feature cards */
+  .feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;max-width:1200px;margin:0 auto;}
+  .feat-cell{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:24px;transition:box-shadow .15s;}
+  .feat-cell h3{font-family:'Fraunces',serif;font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:-.3px;}
+  .feat-cell p{font-size:12px;color:var(--i3);line-height:1.6;margin-top:3px;}
+
+  /* Provinces dark section */
+  .prov-sec{background:var(--i);padding:88px 52px;}
+  .prov-inner{max-width:1160px;margin:0 auto;}
+  .prov-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:40px;}
+  .prov-card{border:1px solid rgba(255,255,255,.12);border-radius:var(--r2);padding:32px 24px;color:rgba(255,255,255,.7);}
+  .prov-card-emoji{font-size:28px;margin-bottom:10px;}
+  .prov-card-name{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:4px;}
+  .prov-card-cnt{font-size:12px;color:rgba(255,255,255,.45);}
+
+  /* How it works */
+  .steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:900px;margin:0 auto;}
+  .step-cell{text-align:center;padding:32px 24px;}
+  .step-cell h3{font-family:'Fraunces',serif;font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px;}
+  .step-cell p{font-size:13px;color:var(--i3);line-height:1.7;}
+
+  /* Reviews */
+  .review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:1200px;margin:0 auto;}
+  .review-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r2);padding:20px;}
+  .review-card h3{font-size:14px;font-weight:600;margin-bottom:4px;}
+  .review-card .meta{font-size:11px;color:var(--i4);margin-bottom:8px;}
+  .review-card p{font-size:12px;color:var(--i3);line-height:1.6;}
+
+  /* Footer */
+  footer{background:var(--bg);border-top:1px solid var(--bd);padding:52px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;max-width:1200px;margin:0 auto;}
+  footer h4{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--i4);margin-bottom:12px;}
+  footer p,footer a{font-size:13px;color:var(--i3);line-height:2;}
+  .footer-copy{text-align:center;padding:20px;font-size:12px;color:var(--i4);border-top:1px solid var(--bd);}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav>
+  <a class="nlogo" href="#">doon<b>.</b></a>
+  <div class="nctr">
+    <a class="nlnk" href="#">Features</a>
+    <a class="nlnk" href="#">Provinces</a>
+    <a class="nlnk" href="#">How It Works</a>
+  </div>
+  <div class="nrt">
+    <a class="nbtn-o" href="#">Sign in</a>
+    <a class="nbtn-s" href="#">Get started</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">
+    <div class="hero-tag-dot">↗</div>
+    Smart Tourism Platform · CALABARZON
+  </div>
+  <h1 class="hero-h1">Discover<br><em>where to go</em><br>in CALABARZON</h1>
+  <p class="hero-sub">AI-powered recommendations, interactive maps, and smart trip planning — all five provinces in one platform.</p>
+  <div class="hero-btns">
+    <a class="hbp" href="#">Start exploring →</a>
+    <a class="hbs" href="#">Sign in</a>
+  </div>
+  <div class="hero-provs">
+    <span class="ptag">Batangas</span>
+    <span class="ptag">Laguna</span>
+    <span class="ptag">Cavite</span>
+    <span class="ptag">Rizal</span>
+    <span class="ptag">Quezon</span>
+  </div>
+</section>
+
+<!-- Stats Strip -->
+<div class="strip">
+  <div class="strip-item"><div class="strip-num">287</div><div class="strip-lbl">Active Destinations</div></div>
+  <div class="strip-item"><div class="strip-num">5</div><div class="strip-lbl">Provinces Covered</div></div>
+  <div class="strip-item"><div class="strip-num">3,841</div><div class="strip-lbl">Tourist Accounts</div></div>
+  <div class="strip-item"><div class="strip-num">18,400</div><div class="strip-lbl">Monthly AI Requests</div></div>
+</div>
+
+<!-- Featured Destinations -->
+<div style="padding:80px 52px;">
+  <div class="section-head">
+    <div class="section-kicker">Featured</div>
+    <h2 class="section-title">Top Destination Picks</h2>
+    <p class="section-sub">The most viewed and highest-rated spots right now.</p>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-cell"><h3>Masasa Beach, Tingloy</h3><p>Batangas · Beach &amp; Water</p><p>Rating 4.9 · 312 reviews</p></div>
+    <div class="feat-cell"><h3>Taal Volcano Viewpoint</h3><p>Batangas · Nature</p><p>Rating 4.8 · 289 reviews</p></div>
+    <div class="feat-cell"><h3>Pagsanjan Falls</h3><p>Laguna · Nature</p><p>Rating 4.7 · 201 reviews</p></div>
+    <div class="feat-cell"><h3>Corregidor Island</h3><p>Cavite · Cultural</p><p>Rating 4.8 · 176 reviews</p></div>
+    <div class="feat-cell"><h3>Pinto Art Museum</h3><p>Rizal · Cultural</p><p>Rating 4.7 · 154 reviews</p></div>
+    <div class="feat-cell"><h3>Mt. Banahaw Eco Park</h3><p>Quezon · Nature</p><p>Rating 4.5 · 98 reviews</p></div>
+    <div class="feat-cell"><h3>Enchanted Kingdom</h3><p>Laguna · Adventure</p><p>Rating 4.4 · 421 reviews</p></div>
+    <div class="feat-cell"><h3>Pico de Loro, Nasugbu</h3><p>Cavite · Hiking</p><p>Rating 4.6 · 133 reviews</p></div>
+  </div>
+</div>
+
+<!-- Provinces -->
+<section class="prov-sec">
+  <div class="prov-inner">
+    <div class="section-head" style="color:#fff;">
+      <div class="section-kicker" style="color:rgba(255,255,255,.45);">Provinces</div>
+      <h2 class="section-title" style="color:#fff;">Explore CALABARZON</h2>
+      <p class="section-sub" style="color:rgba(255,255,255,.55);">Jump into each province and browse local attractions.</p>
+    </div>
+    <div class="prov-grid">
+      <div class="prov-card"><div class="prov-card-emoji">🌋</div><div class="prov-card-name">Batangas</div><div class="prov-card-cnt">68 destinations</div></div>
+      <div class="prov-card"><div class="prov-card-emoji">🏞️</div><div class="prov-card-name">Laguna</div><div class="prov-card-cnt">54 destinations</div></div>
+      <div class="prov-card"><div class="prov-card-emoji">🏰</div><div class="prov-card-name">Cavite</div><div class="prov-card-cnt">61 destinations</div></div>
+      <div class="prov-card"><div class="prov-card-emoji">🌿</div><div class="prov-card-name">Rizal</div><div class="prov-card-cnt">49 destinations</div></div>
+      <div class="prov-card"><div class="prov-card-emoji">🌊</div><div class="prov-card-name">Quezon</div><div class="prov-card-cnt">55 destinations</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<div style="padding:80px 52px;background:#fff;border-top:1px solid var(--bd);">
+  <div class="section-head">
+    <div class="section-kicker">How It Works</div>
+    <h2 class="section-title">Plan Smarter, Travel Better</h2>
+  </div>
+  <div class="steps-row">
+    <div class="step-cell"><h3>1. Discover</h3><p>Browse destinations and region-specific experiences across all five provinces.</p></div>
+    <div class="step-cell"><h3>2. Recommend</h3><p>Use preference-aware AI recommendations for better, personalized picks.</p></div>
+    <div class="step-cell"><h3>3. Itinerary</h3><p>Build and manage complete trip plans in minutes with smart scheduling.</p></div>
+  </div>
+</div>
+
+<!-- Latest Reviews -->
+<div style="padding:80px 52px;">
+  <div class="section-head">
+    <div class="section-kicker">Social Proof</div>
+    <h2 class="section-title">Latest Reviews</h2>
+  </div>
+  <div class="review-grid">
+    <div class="review-card"><h3>Best beach I've ever been to!</h3><div class="meta">By Juan dela Cruz · Masasa Beach · Apr 12, 2025</div><p>The water is crystal clear and the sand is pristine. The ferry ride adds to the adventure. Definitely worth it!</p></div>
+    <div class="review-card"><h3>Breathtaking view of the volcano</h3><div class="meta">By Maria Santos · Taal Volcano · Apr 10, 2025</div><p>Woke up at 4AM for the sunrise trek and it was absolutely worth every step. A must-do in Batangas.</p></div>
+    <div class="review-card"><h3>Pagsanjan is magical</h3><div class="meta">By Jose Reyes · Pagsanjan Falls · Apr 8, 2025</div><p>The bamboo raft ride through the gorge was an experience like no other. Guides were professional and fun.</p></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <div><h3 style="font-family:'Fraunces',serif;font-size:28px;font-weight:700;margin-bottom:8px;">Doon</h3><p>Smart Tourism Platform for CALABARZON.</p></div>
+  <div><h4>Explore</h4><p><a href="#">Destinations</a></p><p><a href="#">Map</a></p></div>
+  <div><h4>Account</h4><p><a href="#">Login</a></p><p><a href="#">Register</a></p></div>
+</footer>
+<div class="footer-copy">© 2025 Doon. All rights reserved.</div>
+
+</body>
+</html>
